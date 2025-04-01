@@ -1,0 +1,15 @@
+# pocketbase files
+pb_data/*
+pb_hooks/*
+
+# Compiled binaries
+*.bin
+*.exe
+
+# Environment files
+.env
+
+# VSCode
+.vscode
+
+.DS_Store

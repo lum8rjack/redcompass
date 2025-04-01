@@ -1,0 +1,16 @@
+services:
+  redcompass:
+    build: .
+    container_name: redcompass
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/pb_data
+      - pb_hooks:/pb_hooks
+    restart: unless-stopped
+
+volumes:
+  pb_data:
+    driver: local
+  pb_hooks:
+    driver: local
