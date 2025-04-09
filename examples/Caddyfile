@@ -1,0 +1,35 @@
+{
+    admin off
+}
+
+yourdomain.com {
+    # Use self-signed certificate
+    tls internal
+
+    request_body {
+        max_size 10MB
+    }
+
+    @static {
+        path /favicon.ico
+        path /categorizations
+        path /domains
+        path /login
+        path /profile
+        path /projects
+        path /settings
+        path /assets/*
+    }
+
+    # Cache assets since they dont change
+    route @static {
+        header Cache-Control "private, max-age=3600" # 1 hour
+    }
+
+    reverse_proxy 127.0.0.1:8090 {
+        header_up Host {http.request.host}
+
+        transport http {
+            read_timeout 360s
+    }
+}
