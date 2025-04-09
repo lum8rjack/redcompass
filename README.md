@@ -91,7 +91,7 @@ npm run dev
 For backend development, you can use:
 
 ```bash
-go run . serve --http "0.0.0.0:8090"
+go run . serve --http "127.0.0.1:8090"
 ```
 
 ## Contributing
