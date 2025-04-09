@@ -12,7 +12,7 @@
   onMounted(async () => {
     try {
       const response = await pocketbase.collection('Domains').getFullList({
-        sort: 'Purchased_Date',
+        sort: '-Name',
         fields: 'id,Name,Purchased_Date,Expiration_Date,Is_Expired,Auto_Renew,Is_Locked,Assigned_Project,Tags,Healthy,Checked_Out_By,expand.Assigned_Project.Name',
         expand: 'Assigned_Project',
       });
