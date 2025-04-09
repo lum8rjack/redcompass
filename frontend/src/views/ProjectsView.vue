@@ -3,7 +3,7 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import { ref, computed, inject, onMounted } from 'vue'
 import { onClickOutside } from '@vueuse/core'
-import { formatDate } from '@/utils/dateUtils'
+import { formatProjectDate } from '@/utils/dateUtils'
 
 const pocketbase = inject('$pocketbase');
 
@@ -430,7 +430,7 @@ const calculateProgress = (startDate, endDate) => {
                       {{ project.Name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {{ formatDate(project.Start_Date) }} - {{ formatDate(project.End_Date) }}
+                      {{ formatProjectDate(project.Start_Date) }} - {{ formatProjectDate(project.End_Date) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                       <span :class="{
