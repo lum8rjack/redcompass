@@ -34,8 +34,8 @@ ENV CGO_ENABLED=0
 # Build the Go application
 RUN go build -ldflags "-s -w" -trimpath -o redcompass.bin
 
-# Final Stage: Run the compiled Go app
-FROM scratch
+# Final Stage: Use a distroless image to run the compiled Go app
+FROM gcr.io/distroless/base
 
 # Set working directory
 WORKDIR /

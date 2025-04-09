@@ -3,7 +3,7 @@ services:
     build: .
     container_name: redcompass
     ports:
-      - "8090:8090"
+      - "127.0.0.1:8090:8090"
     volumes:
       - pb_data:/pb_data
       - pb_hooks:/pb_hooks
