@@ -71,7 +71,7 @@ func DeleteAllDomainRecords(domainName string) error {
 		return err
 	}
 
-	records, err := app.FindAllRecords("Domain_Records",
+	records, _ := app.FindAllRecords("Domain_Records",
 		dbx.NewExp("Domain = {:domain}", dbx.Params{"domain": domainRecord.Get("id").(string)}),
 	)
 

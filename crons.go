@@ -58,8 +58,11 @@ func AddNamecheapCron(jobID string, cron string) {
 				continue
 			}
 
-			// Get records for each domain
-			if d.IsOurDNS {
+			// Get records for each domain if:
+			// - The domain is using our DNS
+			// - The domain is not expired
+			// - The domain is not locked
+			if d.IsOurDNS && !d.IsExpired && !d.IsLocked {
 				ncRecords, err := client.NamecheapGetDomainRecords(d.Name)
 				if err != nil {
 					app.Logger().Error(msg, "function", "NamecheapGetDomainRecords", "domain", d.Name)
