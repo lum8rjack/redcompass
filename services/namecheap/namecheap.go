@@ -62,17 +62,47 @@ func (c *Client) NamecheapGetDomains() ([]Domain, error) {
 		return domains, err
 	}
 
+	// If the Domains is nil, no domains were found
+	if ncresp.Domains == nil {
+		return domains, nil
+	}
+
 	for _, x := range *ncresp.Domains {
-		newDomain := Domain{
-			Name:       *x.Name,
-			Created:    x.Created.Time,
-			Expires:    x.Expires.Time,
-			IsExpired:  *x.IsExpired,
-			IsLocked:   *x.IsLocked,
-			AutoRenew:  *x.AutoRenew,
-			WhoIsGuard: *x.WhoisGuard == "ENABLED",
-			IsOurDNS:   *x.IsOurDNS,
+		newDomain := Domain{}
+
+		// Check the pointers for nil values
+		if x.Name != nil {
+			newDomain.Name = *x.Name
 		}
+
+		if x.Created != nil {
+			newDomain.Created = x.Created.Time
+		}
+
+		if x.Expires != nil {
+			newDomain.Expires = x.Expires.Time
+		}
+
+		if x.IsExpired != nil {
+			newDomain.IsExpired = *x.IsExpired
+		}
+
+		if x.IsLocked != nil {
+			newDomain.IsLocked = *x.IsLocked
+		}
+
+		if x.AutoRenew != nil {
+			newDomain.AutoRenew = *x.AutoRenew
+		}
+
+		if x.WhoisGuard != nil {
+			newDomain.WhoIsGuard = *x.WhoisGuard == "ENABLED"
+		}
+
+		if x.IsOurDNS != nil {
+			newDomain.IsOurDNS = *x.IsOurDNS
+		}
+
 		domains = append(domains, newDomain)
 	}
 
@@ -88,14 +118,34 @@ func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
 		return records, err
 	}
 
+	// If the Hosts is nil, no records were found
+	if ncresp.DomainDNSGetHostsResult.Hosts == nil {
+		return records, nil
+	}
+
 	for _, x := range *ncresp.DomainDNSGetHostsResult.Hosts {
-		records = append(records, Record{
-			Domain:  domain,
-			HostId:  strconv.Itoa(*x.HostId),
-			Name:    *x.Name,
-			Type:    *x.Type,
-			Address: *x.Address,
-		})
+		r := Record{
+			Domain: domain,
+		}
+
+		// Check the pointers for nil values
+		if x.Name != nil {
+			r.Name = *x.Name
+		}
+
+		if x.Type != nil {
+			r.Type = *x.Type
+		}
+
+		if x.Address != nil {
+			r.Address = *x.Address
+		}
+
+		if x.HostId != nil {
+			r.HostId = strconv.Itoa(*x.HostId)
+		}
+
+		records = append(records, r)
 	}
 
 	return records, nil
