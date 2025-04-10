@@ -27,7 +27,7 @@ func bootstrapHook() {
 }
 
 func namecheapStartupHook() {
-	msg := "Namecheap startup hook"
+	msg := "CRON:Namecheap startup hook"
 
 	record, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
 	if err != nil {
@@ -59,12 +59,12 @@ func namecheapStartupHook() {
 	}
 
 	AddNamecheapCron("Namecheap", recordCron)
-	app.Logger().Info(msg, "status", "successfully created", "jobID", "Namecheap", "cron", recordCron)
+	app.Logger().Info(msg, "status", "created", "jobID", "Namecheap", "cron", recordCron)
 }
 
 func namecheapDeleteHook() {
 	app.OnRecordDelete("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "Namecheap delete hook"
+		msg := "CRON:Namecheap delete hook"
 
 		recordName := e.Record.GetString("Provider")
 		if recordName != "Namecheap" {
@@ -72,14 +72,14 @@ func namecheapDeleteHook() {
 		}
 
 		RemoveNamecheapCron("Namecheap")
-		app.Logger().Info(msg, "status", "successfully deleted", "jobID", "Namecheap")
+		app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
 		return e.Next()
 	})
 }
 
 func namecheapCreateHook() {
 	app.OnRecordAfterCreateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "Namecheap create hook"
+		msg := "CRON:Namecheap create hook"
 
 		namecheapHelperFunc(e, msg)
 
@@ -89,7 +89,7 @@ func namecheapCreateHook() {
 
 func namecheapUpdateHook() {
 	app.OnRecordAfterUpdateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "Namecheap update hook"
+		msg := "CRON:Namecheap update hook"
 
 		// Check if the record Provider was changed / no Namecheap providers
 		_, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
@@ -140,7 +140,7 @@ func namecheapHelperFunc(e *core.RecordEvent, msg string) {
 	}
 
 	RemoveNamecheapCron("Namecheap")
-	app.Logger().Info(msg, "status", "successfully deleted", "jobID", "Namecheap")
+	app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
 	AddNamecheapCron("Namecheap", recordCron)
-	app.Logger().Info(msg, "status", "successfully created", "jobID", "Namecheap", "cron", recordCron)
+	app.Logger().Info(msg, "status", "created", "jobID", "Namecheap", "cron", recordCron)
 }

@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/lum8rjack/redcompass/services/namecheap"
 )
 
 func AddNamecheapCron(jobID string, cron string) {
-	app.Cron().MustAdd(jobID, cron, func() { // "*/15 * * * *"
-		msg := "Namecheap cron"
+	app.Cron().MustAdd(jobID, cron, func() {
+		msg := "CRON:Namecheap"
 
-		app.Logger().Info(msg, "message", "Namecheap cron started")
+		app.Logger().Info(msg+" started", "status", "started")
 		record, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
 		if err != nil {
 			app.Logger().Error(msg, "function", "app.FindFirstRecordByData", "error", err.Error())
@@ -63,6 +64,7 @@ func AddNamecheapCron(jobID string, cron string) {
 			// - The domain is not expired
 			// - The domain is not locked
 			if d.IsOurDNS && !d.IsExpired && !d.IsLocked {
+				time.Sleep(1 * time.Second)
 				ncRecords, err := client.NamecheapGetDomainRecords(d.Name)
 				if err != nil {
 					app.Logger().Error(msg, "function", "NamecheapGetDomainRecords", "domain", d.Name)
@@ -78,9 +80,11 @@ func AddNamecheapCron(jobID string, cron string) {
 					}
 				}
 			} else {
-				app.Logger().Info(msg, "message", "using a custom DNS", "domain", d.Name)
+				app.Logger().Debug(msg+" skipped record retrieval", "status", "skipped", "domain", d.Name, "isOurDNS", d.IsOurDNS, "isExpired", d.IsExpired, "isLocked", d.IsLocked)
 			}
 		}
+
+		app.Logger().Info(msg+" completed", "status", "completed")
 	})
 }
 
