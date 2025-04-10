@@ -48,14 +48,14 @@ func AddNamecheapCron(jobID string, cron string) {
 		for _, d := range response {
 			err = AddDomain("Namecheap", d.Name, d.Created, d.Expires, d.IsExpired, d.AutoRenew, d.IsLocked, !d.IsOurDNS)
 			if err != nil {
-				app.Logger().Error(msg, "function", "AddDomainRecord", "error", err.Error())
+				app.Logger().Error(msg, "function", "AddDomainRecord", "domain", d.Name, "error", err.Error())
 				continue
 			}
 
 			// Delete all existing records for this domain
 			err = DeleteAllDomainRecords(d.Name)
 			if err != nil {
-				app.Logger().Error(msg, "function", "DeleteAllDomainRecords", "error", err.Error())
+				app.Logger().Error(msg, "function", "DeleteAllDomainRecords", "domain", d.Name, "error", err.Error())
 				continue
 			}
 
@@ -67,7 +67,7 @@ func AddNamecheapCron(jobID string, cron string) {
 				time.Sleep(1 * time.Second)
 				ncRecords, err := client.NamecheapGetDomainRecords(d.Name)
 				if err != nil {
-					app.Logger().Error(msg, "function", "NamecheapGetDomainRecords", "domain", d.Name)
+					app.Logger().Error(msg, "function", "NamecheapGetDomainRecords", "domain", d.Name, "error", err.Error())
 					continue
 				}
 
@@ -75,7 +75,7 @@ func AddNamecheapCron(jobID string, cron string) {
 				for _, r := range ncRecords {
 					err = AddDomainRecord(d.Name, r.Name, r.Type, r.Address)
 					if err != nil {
-						app.Logger().Error(msg, "function", "AddDomainRecord", "error", err.Error())
+						app.Logger().Error(msg, "function", "AddDomainRecord", "domain", d.Name, "error", err.Error())
 						continue
 					}
 				}
