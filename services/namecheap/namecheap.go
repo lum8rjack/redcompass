@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	nc "github.com/namecheap/go-namecheap-sdk/v2/namecheap"
+	nc "github.com/lum8rjack/go-namecheap-sdk/v2/namecheap"
 )
 
 type Domain struct {

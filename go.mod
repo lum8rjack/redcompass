@@ -3,7 +3,7 @@ module github.com/lum8rjack/redcompass
 go 1.24.1
 
 require (
-	github.com/namecheap/go-namecheap-sdk/v2 v2.4.0
+	github.com/lum8rjack/go-namecheap-sdk/v2 v2.0.0-20250414024852-aa24fc3d3646
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.26.6
 	github.com/spf13/cobra v1.9.1
@@ -35,7 +35,8 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/weppos/publicsuffix-go v0.15.0 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/weppos/publicsuffix-go v0.40.2 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/image v0.25.0 // indirect
