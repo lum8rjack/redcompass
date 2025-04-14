@@ -151,6 +151,7 @@ onClickOutside(healthContainer, () => {
                   <!-- Dropdown trigger button -->
                   <button
                     type="button"
+                    id="healthFilter"
                     @click="showHealthDropdown = !showHealthDropdown"
                     class="filter-input text-left"
                   >

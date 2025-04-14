@@ -306,6 +306,8 @@ onClickOutside(searchRef, () => {
                       type="text"
                       v-model="searchQuery"
                       @focus="showResults = true"
+                      name="project-search"
+                      id="project-search"
                       placeholder="Search for a project..."
                       class="w-full rounded-md bg-gray-600 border-gray-500 text-white placeholder-gray-400 text-sm focus:border-gray-400 focus:ring-gray-400 focus:ring-offset-gray-900 focus:ring-offset-0 py-1.5 pl-2"
                     >
@@ -463,6 +465,8 @@ onClickOutside(searchRef, () => {
                 v-if="canEdit"
                 v-model="notes"
                 rows="4"
+                name="domain-notes"
+                id="domain-notes"
                 class="block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-gray-400 focus:ring-gray-400 focus:ring-offset-gray-900 focus:ring-offset-0 sm:text-sm p-2"
                 placeholder="Add notes about this domain..."
               ></textarea>

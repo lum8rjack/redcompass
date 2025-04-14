@@ -1,7 +1,6 @@
 <script setup>
   import Header from '@/components/Header.vue'
   import Footer from '@/components/Footer.vue'
-  import { formatDate } from '@/utils/dateUtils'
   import { ref, computed, inject, onMounted } from 'vue'
 
   const pocketbase = inject('$pocketbase')

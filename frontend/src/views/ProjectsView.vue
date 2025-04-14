@@ -3,7 +3,7 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import { ref, computed, inject, onMounted } from 'vue'
 import { onClickOutside } from '@vueuse/core'
-import { formatProjectDate } from '@/utils/dateUtils'
+import { formatDate } from '@/utils/dateUtils'
 
 const pocketbase = inject('$pocketbase');
 
@@ -343,6 +343,7 @@ const calculateProgress = (startDate, endDate) => {
                   <!-- Dropdown trigger button -->
                   <button
                     type="button"
+                    id="statusFilter"
                     @click="showStatusDropdown = !showStatusDropdown"
                     class="w-full bg-gray-700 border border-gray-600 rounded-md py-1.5 pl-2 pr-10 text-left text-white focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 sm:text-sm"
                   >
@@ -430,7 +431,7 @@ const calculateProgress = (startDate, endDate) => {
                       {{ project.Name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {{ formatProjectDate(project.Start_Date) }} - {{ formatProjectDate(project.End_Date) }}
+                      {{ formatDate(project.Start_Date) }} - {{ formatDate(project.End_Date) }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                       <span :class="{
