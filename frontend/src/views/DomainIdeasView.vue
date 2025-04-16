@@ -172,7 +172,7 @@ onMounted(() => {
                   v-model="newDomain.price"
                   required
                   class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-gray-400 focus:ring-gray-400 focus:ring-offset-gray-900 focus:ring-offset-0 sm:text-sm py-1.5 pl-2"
-                  placeholder="$1000"
+                  placeholder="$19.98"
                 />
               </div>
 
@@ -185,7 +185,7 @@ onMounted(() => {
                   rows="3"
                   required
                   class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-gray-400 focus:ring-gray-400 focus:ring-offset-gray-900 focus:ring-offset-0 sm:text-sm py-1.5 pl-2"
-                  placeholder="Why this domain would be valuable..."
+                  placeholder="What would this domain be used for?"
                 ></textarea>
               </div>
 
