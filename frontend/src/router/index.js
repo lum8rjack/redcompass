@@ -7,6 +7,7 @@ import SettingsView from '@/views/SettingsView.vue'
 import ProjectView from '@/views/ProjectView.vue'
 import DomainView from '@/views/DomainView.vue'
 import CategorizationsView from '../views/CategorizationsView.vue'
+import DomainIdeasView from '../views/DomainIdeasView.vue'
 import { isAuthenticated } from '@/utils/auth'
 
 const router = createRouter({
@@ -35,6 +36,12 @@ const router = createRouter({
       path: '/domains',
       name: 'domains',
       component: DomainsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/domain-ideas',
+      name: 'domain-ideas',
+      component: DomainIdeasView,
       meta: { requiresAuth: true }
     },
     {

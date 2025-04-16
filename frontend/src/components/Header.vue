@@ -11,6 +11,7 @@
         <a href="/domains" class="text-md font-semibold leading-6 text-white">Domains</a>
         <a href="/projects" class="text-md font-semibold leading-6 text-white">Projects</a>
         <a href="/categorizations" class="text-md font-semibold leading-6 text-white">Categorizations</a>
+        <a href="/domain-ideas" class="text-md font-semibold leading-6 text-white">Domain Ideas</a>
       </div>
       <div class="flex lg:flex-1 lg:justify-end">
         <div class="relative avatar-dropdown">
