@@ -89,16 +89,12 @@ const categorizationServices = [
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Overview and Tips Section -->
-        <div class="bg-gray-800 shadow rounded-lg mb-6">
-          <div class="px-4 py-5 sm:p-6">
-            <h1 class="text-2xl font-bold text-white mb-4">Domain Categorization</h1>
-            <div class="text-gray-300 space-y-4 mb-4">
-              <p>
-                Domain categorization is a crucial aspect of web security and content filtering. It helps organizations ensure their domains are properly classified for business use, prevent legitimate domains from being blocked by security filters, maintain appropriate content categorization for compliance, and improve visibility and accessibility of business websites. The services below are available to categorize your domains.
-              </p>
-            </div>
-          </div>
+        <!-- Page Description -->
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-white mb-2">Domain Categorization</h1>
+          <p class="text-gray-400">
+            Domain categorization is a crucial aspect of web security and content filtering. It helps organizations ensure their domains are properly classified for business use, prevent legitimate domains from being blocked by security filters, maintain appropriate content categorization for compliance, and improve visibility and accessibility of business websites.
+          </p>
         </div>
 
         <!-- Services Grid -->

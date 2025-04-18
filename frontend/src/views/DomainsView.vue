@@ -109,7 +109,13 @@ onClickOutside(healthContainer, () => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-bold mb-6 text-center text-white">Domain Management</h2>
+        <!-- Page Description -->
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-white mb-2">Domain Management</h1>
+          <p class="text-gray-400">
+            Manage your domains, track their health status, and assign them to projects. Monitor expiration dates, auto-renewal settings, and domain health from a centralized dashboard.
+          </p>
+        </div>
 
         <!-- Filter Section -->
         <div class="bg-gray-800 shadow rounded-lg mb-6">

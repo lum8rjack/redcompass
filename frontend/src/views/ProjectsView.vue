@@ -143,13 +143,6 @@ const handleCreateProject = async () => {
   }
 }
 
-// Helper function to get user names from IDs
-const getSelectedUserNames = () => {
-  return newProject.value.selectedUsers
-    .map(id => availableUsers.find(user => user.id === id)?.name)
-    .filter(Boolean)
-}
-
 // Add new refs for search functionality
 const searchQuery = ref('')
 const showResults = ref(false)
@@ -215,6 +208,14 @@ const calculateProgress = (startDate, endDate) => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page Description -->
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-white mb-2">Project Management</h1>
+          <p class="text-gray-400">
+            Manage your projects, track their progress, and assign team members. Create new projects and monitor their status from start to completion.
+          </p>
+        </div>
+
         <!-- Project Creation Form -->
         <div v-if="!isViewer" class="bg-gray-800 shadow rounded-lg mb-6">
           <div class="px-4 py-5 sm:p-6">
