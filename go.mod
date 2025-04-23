@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/lum8rjack/go-namecheap-sdk/v2 v2.0.0-20250414024852-aa24fc3d3646
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.27.0
+	github.com/pocketbase/pocketbase v0.27.1
 	github.com/spf13/cobra v1.9.1
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/ganigeorgiev/fexpr v0.5.0 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
