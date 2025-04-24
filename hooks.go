@@ -53,7 +53,7 @@ func namecheapStartupHook() {
 	}
 
 	recordCron := record.GetString("Cron")
-	if recordSettings == "" {
+	if recordCron == "" {
 		app.Logger().Error(msg, "function", "record.GetString", "error", "no cron")
 		return
 	}
@@ -105,17 +105,24 @@ func namecheapUpdateHook() {
 }
 
 func namecheapHelperFunc(e *core.RecordEvent, msg string) {
+	// Remove the old cron job
+	RemoveNamecheapCron("Namecheap")
+	app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
+
+	// Check if the record Provider was changed / no Namecheap providers
 	recordName := e.Record.GetString("Provider")
 	if recordName != "Namecheap" {
 		return
 	}
 
+	// Get the new settings
 	recordSettings := e.Record.GetString("Settings")
 	if recordSettings == "" {
 		app.Logger().Error(msg, "function", "record.GetString", "error", "no settings")
 		return
 	}
 
+	// Unmarshal the settings
 	var settings namecheap.Settings
 	err := json.Unmarshal([]byte(recordSettings), &settings)
 	if err != nil {
@@ -123,24 +130,20 @@ func namecheapHelperFunc(e *core.RecordEvent, msg string) {
 		return
 	}
 
+	// Check if the settings are valid
 	if settings.ApiKey == "" || settings.IP == "" || settings.Username == "" {
 		app.Logger().Error(msg, "error", "invalid settings")
 		return
 	}
 
+	// Get the new cron
 	recordCron := e.Record.GetString("Cron")
-	if recordSettings == "" {
+	if recordCron == "" {
 		app.Logger().Error(msg, "function", "record.GetString", "error", "no cron")
 		return
 	}
 
-	if recordSettings == "" {
-		app.Logger().Error(msg, "function", "record.GetString", "error", "no cron")
-		return
-	}
-
-	RemoveNamecheapCron("Namecheap")
-	app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
+	// Add the new cron job
 	AddNamecheapCron("Namecheap", recordCron)
 	app.Logger().Info(msg, "status", "created", "jobID", "Namecheap", "cron", recordCron)
 }

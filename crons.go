@@ -8,9 +8,19 @@ import (
 )
 
 func AddNamecheapCron(jobID string, cron string) {
-	app.Cron().MustAdd(jobID, cron, func() {
-		msg := "CRON:Namecheap"
+	msg := "CRON:Namecheap"
 
+	if cron == "" {
+		app.Logger().Error(msg+" error cron is empty", "method", "AddNamecheapCron")
+		return
+	}
+
+	if jobID == "" {
+		app.Logger().Error(msg+" error jobID is empty", "method", "AddNamecheapCron")
+		return
+	}
+
+	app.Cron().MustAdd(jobID, cron, func() {
 		app.Logger().Info(msg+" started", "status", "started")
 		record, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
 		if err != nil {
@@ -90,5 +100,10 @@ func AddNamecheapCron(jobID string, cron string) {
 
 // Remove the Namecheap cron
 func RemoveNamecheapCron(jobID string) {
+	if jobID == "" {
+		app.Logger().Error("CRON:Namecheap error jobID is empty", "method", "RemoveNamecheapCron")
+		return
+	}
+
 	app.Cron().Remove(jobID)
 }
