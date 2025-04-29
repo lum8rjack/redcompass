@@ -48,7 +48,11 @@ func namecheapStartupHook() {
 	}
 
 	if settings.ApiKey == "" || settings.IP == "" || settings.Username == "" {
-		app.Logger().Error(msg, "error", "invalid settings")
+		emtpyKey := settings.ApiKey == ""
+		emtpyIP := settings.IP == ""
+		emtpyUsername := settings.Username == ""
+
+		app.Logger().Error(msg, "error", "invalid settings", "emptyKey", emtpyKey, "emptyIP", emtpyIP, "emptyUsername", emtpyUsername)
 		return
 	}
 
@@ -132,7 +136,11 @@ func namecheapHelperFunc(e *core.RecordEvent, msg string) {
 
 	// Check if the settings are valid
 	if settings.ApiKey == "" || settings.IP == "" || settings.Username == "" {
-		app.Logger().Error(msg, "error", "invalid settings")
+		emptyKey := settings.ApiKey == ""
+		emptyIP := settings.IP == ""
+		emptyUsername := settings.Username == ""
+
+		app.Logger().Error(msg, "error", "invalid settings", "emptyKey", emptyKey, "emptyIP", emptyIP, "emptyUsername", emptyUsername)
 		return
 	}
 
