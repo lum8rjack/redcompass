@@ -7,6 +7,7 @@ require (
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.27.1
 	github.com/spf13/cobra v1.9.1
+	golang.org/x/time v0.11.0
 )
 
 require (

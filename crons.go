@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/lum8rjack/redcompass/services/namecheap"
 )
@@ -74,7 +73,6 @@ func AddNamecheapCron(jobID string, cron string) {
 			// - The domain is not expired
 			// - The domain is not locked
 			if d.IsOurDNS && !d.IsExpired && !d.IsLocked {
-				time.Sleep(1 * time.Second)
 				ncRecords, err := client.NamecheapGetDomainRecords(d.Name)
 				if err != nil {
 					app.Logger().Error(msg, "function", "NamecheapGetDomainRecords", "domain", d.Name, "error", err.Error())
