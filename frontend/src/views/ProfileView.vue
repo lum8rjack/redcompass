@@ -96,8 +96,7 @@
       if(response) {
         // If marking as complete, unassign all domains and set Last_Used
         const projectIndex = projects.value.findIndex(p => p.id === project.id);
-        console.log('projectIndex', projectIndex)
-        console.log('projects', projects.value)
+        
         if (projectIndex !== -1) {
           projects.value[projectIndex] = {
             ...projects.value[projectIndex],

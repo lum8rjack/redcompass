@@ -43,7 +43,6 @@ onMounted(async () => {
       expand: 'Assigned_Project,Last_Used'
     })
     domain.value = record
-    console.log('domain.value', domain.value)
     notes.value = record.Notes || ''
     isHealthy.value = record.Healthy || false
 
@@ -56,9 +55,9 @@ onMounted(async () => {
 
     // Fetch available projects
     const projectsResponse = await pocketbase.collection('Projects').getFullList({
-      fields: 'id,Name,Completed,expand.Project_Members.name',
+      fields: 'id,Name,Completed,Project_Members',
       sort: 'Name',
-      filter: 'Completed = false'  // Only show active projects
+      filter: 'Completed = false && Project_Members ~ "' + pocketbase.authStore.model.id + '"' // Only show active projects and projects that the user is a member of
     })
     availableProjects.value = projectsResponse
   } catch (err) {
