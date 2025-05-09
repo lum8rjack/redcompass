@@ -5,6 +5,7 @@ import { ref, inject, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { formatDate } from '@/utils/dateUtils'
 import { onClickOutside } from '@/composables/onClickOutside'
+import { updateProjectStatus } from '@/utils/projectUtils'
 
 const route = useRoute()
 const pocketbase = inject('$pocketbase')
@@ -74,48 +75,35 @@ const toggleStatus = async () => {
     showConfirmModal.value = true
   } else {
     // If reactivating, no confirmation needed
-    await updateProjectStatus()
+    await handleProjectStatusUpdate()
   }
 }
 
-const updateProjectStatus = async () => {
+const handleProjectStatusUpdate = async () => {
   try {
-    const response = await pocketbase.collection('Projects').update(project.value.id, {
-      "Completed": !project.value.Completed
-    });
-    
-    if(response) {
-      // If marking as complete, unassign all domains and set Last_Used
-      if (!project.value.Completed) {
-        // Get all domains assigned to this project
-        const assignedDomains = await pocketbase.collection('Domains').getFullList({
-          filter: `Assigned_Project = "${project.value.id}"`
-        });
-
-        // Unassign project from each domain and set Last_Used
-        for (const domain of assignedDomains) {
-          await pocketbase.collection('Domains').update(domain.id, {
-            "Assigned_Project": null,
-            "Last_Used": project.value.id
-          });
-        }
-      }
-      // Update local state
-      project.value.Completed = response.Completed;
-      // Refresh domains list if marking complete
-      if (response.Completed) {
-        domains.value = [];
-      }
+    const response = await updateProjectStatus(pocketbase, project.value)
+    // Update local state
+    project.value.Completed = response.Completed
+    // Refresh domains list if marking complete
+    if (response.Completed) {
+      domains.value = []
+    } else {
+      // If reactivating, refetch domains
+      const domainsRecord = await pocketbase.collection('Domains').getFullList({
+        filter: `Assigned_Project = "${project.value.id}"`,
+        sort: 'Name'
+      })
+      domains.value = domainsRecord
     }
   } catch (error) {
-    console.error('Error updating project status:', error);
+    console.error('Error updating project status:', error)
   } finally {
-    showConfirmModal.value = false;
+    showConfirmModal.value = false
   }
 }
 
 const confirmComplete = () => {
-  updateProjectStatus()
+  handleProjectStatusUpdate()
 }
 
 const cancelComplete = () => {

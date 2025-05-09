@@ -3,6 +3,7 @@
   import Footer from '@/components/Footer.vue'
   import { formatDate } from '@/utils/dateUtils'
   import { ref, computed, inject, onMounted } from 'vue'
+  import { updateProjectStatus } from '@/utils/projectUtils'
 
   const pocketbase = inject('$pocketbase')
   const avatarUrl = ref('')
@@ -83,50 +84,34 @@
       showConfirmModal.value = true
     } else {
       // If reactivating, no confirmation needed
-      await updateProjectStatus(project)
-    }
-  }
-
-  const updateProjectStatus = async (project) => {
-    try {
-      const response = await pocketbase.collection('Projects').update(project.id, {
-        "Completed": !project.Completed
-      });
-      
-      if(response) {
-        // If marking as complete, unassign all domains and set Last_Used
-        const projectIndex = projects.value.findIndex(p => p.id === project.id);
-        
-        if (projectIndex !== -1) {
-          projects.value[projectIndex] = {
-            ...projects.value[projectIndex],
-            Completed: response.Completed
-          };
-        }
-        // If marking as complete, unassign all domains
-        const assignedDomains = await pocketbase.collection('Domains').getFullList({
-          filter: `Assigned_Project = "${project.id}"`
-        });
-        
-        // Unassign project from each domain and set Last_Used
-        for (const domain of assignedDomains) {
-          await pocketbase.collection('Domains').update(domain.id, {
-            "Assigned_Project": null,
-            "Last_Used": project.id
-          });
+      await updateProjectStatus(pocketbase, project)
+      // Update local projects array
+      const projectIndex = projects.value.findIndex(p => p.id === project.id)
+      if (projectIndex !== -1) {
+        projects.value[projectIndex] = {
+          ...projects.value[projectIndex],
+          Completed: !project.Completed
         }
       }
-    } catch (error) {
-      console.error('Error updating project status:', error);
-    } finally {
-      showConfirmModal.value = false;
-      projectToComplete.value = null;
     }
   }
 
   const confirmComplete = () => {
     if (projectToComplete.value) {
-      updateProjectStatus(projectToComplete.value)
+      updateProjectStatus(pocketbase, projectToComplete.value)
+        .then(() => {
+          const projectIndex = projects.value.findIndex(p => p.id === projectToComplete.value.id)
+          if (projectIndex !== -1) {
+            projects.value[projectIndex] = {
+              ...projects.value[projectIndex],
+              Completed: !projectToComplete.value.Completed
+            }
+          }
+        })
+        .finally(() => {
+          showConfirmModal.value = false
+          projectToComplete.value = null
+        })
     }
   }
 
