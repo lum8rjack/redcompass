@@ -2,6 +2,7 @@ package namecheap
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"time"
 
@@ -35,8 +36,10 @@ type Settings struct {
 }
 
 type Client struct {
-	client  *nc.Client
-	limiter *rate.Limiter
+	client           *nc.Client
+	perMinuteLimiter *rate.Limiter
+	perHourLimiter   *rate.Limiter
+	perDayLimiter    *rate.Limiter
 }
 
 func NewClient(username string, apikey string, ip string) Client {
@@ -48,9 +51,12 @@ func NewClient(username string, apikey string, ip string) Client {
 		UseSandbox: false,
 	})
 
+	// Namecheap limit: 50/min, 700/hour, and 8000/day across the whole key
 	return Client{
-		client:  c,
-		limiter: rate.NewLimiter(rate.Limit(50.0/60.0), 1), // Namecheap limit: 50/min, 700/hour, and 8000/day across the whole key
+		client:           c,
+		perMinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/50), 1),
+		perHourLimiter:   rate.NewLimiter(rate.Every(time.Hour/700), 1),
+		perDayLimiter:    rate.NewLimiter(rate.Every(24*time.Hour/8000), 1),
 	}
 }
 
@@ -59,7 +65,7 @@ func (c *Client) NamecheapGetDomains() ([]Domain, error) {
 	var domains []Domain
 
 	// Wait for rate limiter
-	if err := c.limiter.Wait(context.Background()); err != nil {
+	if err := c.WaitForRateLimit(); err != nil {
 		return nil, err
 	}
 
@@ -123,7 +129,7 @@ func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
 	var records []Record
 
 	// Wait for rate limiter
-	if err := c.limiter.Wait(context.Background()); err != nil {
+	if err := c.WaitForRateLimit(); err != nil {
 		return nil, err
 	}
 
@@ -163,4 +169,24 @@ func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
 	}
 
 	return records, nil
+}
+
+// Wait for the rate limiters
+func (c *Client) WaitForRateLimit() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	if err := c.perMinuteLimiter.Wait(ctx); err != nil {
+		return errors.New("failed to wait for per minute rate limit")
+	}
+
+	if err := c.perHourLimiter.Wait(ctx); err != nil {
+		return errors.New("failed to wait for per hour rate limit")
+	}
+
+	if err := c.perDayLimiter.Wait(ctx); err != nil {
+		return errors.New("failed to wait for per day rate limit")
+	}
+
+	return nil
 }
