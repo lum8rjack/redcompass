@@ -55,8 +55,8 @@ func NewClient(username string, apikey string, ip string) Client {
 	return Client{
 		client:           c,
 		perMinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/50), 1),
-		perHourLimiter:   rate.NewLimiter(rate.Every(time.Hour/700), 1),
-		perDayLimiter:    rate.NewLimiter(rate.Every(24*time.Hour/8000), 1),
+		perHourLimiter:   rate.NewLimiter(rate.Every(time.Hour/700), 650),
+		perDayLimiter:    rate.NewLimiter(rate.Every(24*time.Hour/8000), 7900),
 	}
 }
 
