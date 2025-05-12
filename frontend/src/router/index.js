@@ -8,6 +8,7 @@ import ProjectView from '@/views/ProjectView.vue'
 import DomainView from '@/views/DomainView.vue'
 import CategorizationsView from '../views/CategorizationsView.vue'
 import DomainIdeasView from '../views/DomainIdeasView.vue'
+import PhishingView from '../views/PhishingView.vue'
 import { isAuthenticated } from '@/utils/auth'
 
 const router = createRouter({
@@ -79,6 +80,12 @@ const router = createRouter({
       name: 'categorizations',
       component: CategorizationsView,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/phishing',
+      name: 'phishing',
+      component: PhishingView,
+      meta: { requiresAuth: true, description: 'Phishing Campaign Management' }
     }
   ]
 })

@@ -11,6 +11,7 @@
         <a href="/domains" class="text-md font-semibold leading-6 text-white">Domains</a>
         <a href="/projects" class="text-md font-semibold leading-6 text-white">Projects</a>
         <a href="/categorizations" class="text-md font-semibold leading-6 text-white">Categorizations</a>
+        <a href="/phishing" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Phishing</a>
         <a href="/domain-ideas" class="text-md font-semibold leading-6 text-white">Domain Ideas</a>
       </div>
       <div class="flex lg:flex-1 lg:justify-end">
@@ -114,4 +115,8 @@ if (typeof window !== 'undefined') {
 </script>
 
 <style scoped>
+/* Add some hover effects for navigation links */
+a {
+  transition: all 0.2s ease;
+}
 </style> 
