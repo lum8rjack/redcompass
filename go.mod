@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/lum8rjack/go-namecheap-sdk/v2 v2.0.0-20250414024852-aa24fc3d3646
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.27.2
+	github.com/pocketbase/pocketbase v0.28.0
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/time v0.11.0
 )
