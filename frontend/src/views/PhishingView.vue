@@ -1,8 +1,9 @@
 <script setup>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import PageDescription from '@/components/PageDescription.vue'
 import { ref, inject, onMounted, computed, watch } from 'vue'
-
+import { canEdit } from '@/utils/auth'
 const pocketbase = inject('$pocketbase')
 
 // For file uploads
@@ -43,205 +44,8 @@ const isEditingCampaignInfo = ref(false)
 const editedCampaignName = ref('')
 const editedTargetGroup = ref('')
 
-// Sample phishing tools and resources
-const phishingTools = ref([
-    {
-        name: 'GoPhish',
-        description: 'Open-source phishing toolkit designed for businesses to conduct phishing awareness campaigns',
-        url: 'https://getgophish.com/',
-        icon: 'GoPhish'
-    },
-    {
-        name: 'EvilGinx2',
-        description: 'Advanced phishing framework for capturing credentials and session cookies',
-        url: 'https://github.com/kgretzky/evilginx2',
-        icon: 'EvilGinx2'
-    },
-    {
-        name: 'SocialFish',
-        description: 'Educational tool for social media phishing',
-        url: 'https://github.com/UndeadSec/SocialFish',
-        icon: 'SocialFish'
-    },
-    {
-        name: 'Lucy',
-        description: 'Commercial phishing awareness solution',
-        url: 'https://lucysecurity.com/',
-        icon: 'Lucy'
-    },
-    {
-        name: 'King Phisher',
-        description: 'Tool for testing and promoting user awareness',
-        url: 'https://github.com/rsmusllp/king-phisher',
-        icon: 'King Phisher'
-    }
-])
-
 // Replace with phishlets tracking
-const phishlets = ref([
-  {
-    id: 1,
-    name: 'Microsoft 365',
-    uploadDate: '2024-05-15',
-    uploadedBy: 'admin',
-    notes: '',
-    content: `domain: login.microsoftonline.com
-  keys:
-  - key.pem
-  - cert.pem
-  originURL: https://login.microsoftonline.com
-  proxies:
-    - type: template
-      target: https://login.microsoftonline.com
-      pathScope: /
-      triggers:
-        - trigger: login.microsoftonline.com
-          params:
-            subdomain: login
-      headers:
-        Set-Cookie: JSESSIONID={session_id}; Domain=.microsoftonline.com; Secure; HttpOnly
-  credentials:
-    username:
-      key: login
-      search: '(.*)'
-      type: post
-    password:
-      key: passwd
-      search: '(.*)'
-      type: post`
-  },
-  {
-    id: 2,
-    name: 'Google Workspace',
-    uploadDate: '2024-05-10',
-    uploadedBy: 'analyst1',
-    notes: '',
-    content: `domain: accounts.google.com
-  keys:
-  - key.pem
-  - cert.pem
-  originURL: https://accounts.google.com
-  proxies:
-    - type: template
-      target: https://accounts.google.com
-      pathScope: /
-      triggers:
-        - trigger: accounts.google.com
-          params:
-            subdomain: accounts
-      headers:
-        Set-Cookie: SIDCC={session_id}; Domain=.google.com; Secure; HttpOnly
-  credentials:
-    username:
-      key: identifier
-      search: '(.*)'
-      type: post
-    password:
-      key: password
-      search: '(.*)'
-      type: post`
-  },
-  {
-    id: 3,
-    name: 'Okta SSO',
-    uploadDate: '2024-04-30',
-    uploadedBy: 'redteam',
-    notes: '',
-    content: `domain: login.okta.com
-  keys:
-  - key.pem
-  - cert.pem
-  originURL: https://login.okta.com
-  proxies:
-    - type: template
-      target: https://login.okta.com
-      pathScope: /
-      triggers:
-        - trigger: login.okta.com
-          params:
-            subdomain: login
-      headers:
-        Set-Cookie: OKTA_SESSION={session_id}; Domain=.okta.com; Secure; HttpOnly
-  credentials:
-    username:
-      key: username
-      search: '(.*)'
-      type: post
-    password:
-      key: password
-      search: '(.*)'
-      type: post`
-  },
-  {
-    id: 4,
-    name: 'Salesforce',
-    uploadDate: '2024-04-22',
-    uploadedBy: 'pentester',
-    notes: '',
-    content: `domain: login.salesforce.com
-  keys:
-  - key.pem
-  - cert.pem
-  originURL: https://login.salesforce.com
-  proxies:
-    - type: template
-      target: https://login.salesforce.com
-      pathScope: /
-      triggers:
-        - trigger: login.salesforce.com
-          params:
-            subdomain: login
-      headers:
-        Set-Cookie: sid={session_id}; Domain=.salesforce.com; Secure; HttpOnly
-  credentials:
-    username:
-      key: username
-      search: '(.*)'
-      type: post
-    password:
-      key: password
-      search: '(.*)'
-      type: post`
-  },
-  {
-    id: 5,
-    name: 'AWS Console',
-    uploadDate: '2024-04-15',
-    uploadedBy: 'admin',
-    notes: '',
-    content: `domain: signin.aws.amazon.com
-  keys:
-  - key.pem
-  - cert.pem
-  originURL: https://signin.aws.amazon.com
-  proxies:
-    - type: template
-      target: https://signin.aws.amazon.com
-      pathScope: /
-      triggers:
-        - trigger: signin.aws.amazon.com
-          params:
-            subdomain: signin
-      headers:
-        Set-Cookie: aws-userInfo={session_id}; Domain=.amazon.com; Secure; HttpOnly
-  credentials:
-    username:
-      key: email
-      search: '(.*)'
-      type: post
-    password:
-      key: password
-      search: '(.*)'
-      type: post`
-  }
-])
-
-// Phishlet upload functionality
-const phishletFile = ref(null)
-const phishletName = ref('')
-const showPhishletUploadModal = ref(false)
-const phishletUploadSuccess = ref(false)
-const phishletUploadError = ref('')
+const phishlets = ref([])
 
 // Phishlet detail modal
 const showPhishletDetailModal = ref(false)
@@ -307,32 +111,6 @@ const sampleHtmlTemplates = {
       <p>Regards,<br>IT Department</p>
     </div>
   </body>
-  </html>`,
-  3: `<!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>New Employee Onboarding</title>
-    <style>
-      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-      .header { background-color: #27ae60; color: white; padding: 10px; text-align: center; }
-      .content { padding: 20px; }
-      .button { background-color: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1>Welcome to the Company!</h1>
-    </div>
-    <div class="content">
-      <h2>Complete Your Onboarding</h2>
-      <p>Dear New Team Member,</p>
-      <p>Welcome to the team! To complete your onboarding process, please set up your account by clicking the button below.</p>
-      <p><a href="#" class="button">Complete Onboarding</a></p>
-      <p>Please complete this step within the next 48 hours.</p>
-      <p>Best regards,<br>HR Department</p>
-    </div>
-  </body>
   </html>`
 };
 
@@ -384,32 +162,7 @@ tracking:
 notifications:
   admin_email: "securityteam@company.com"
   success_alerts: true
-  progress_updates: hourly`,
-  
-  3: `# Phishing Campaign Configuration for 'New Hire Training'
-name: New Hire Training
-target:
-  group: New Employees
-  email_domain: company.com
-  count: 25
-  filter: "hire_date > 2024-01-01"
-schedule:
-  start_date: 2024-06-01
-  end_date: 2024-06-10
-  send_time: '11:00'
-template:
-  subject: "Welcome - Complete Your Onboarding"
-  sender: "HR Department <hr@company-onboarding.com>"
-  reply_to: "onboarding@company-onboarding.com"
-tracking:
-  landing_page: "https://onboarding.company.com/setup"
-  click_tracking: true
-  open_tracking: true
-  form_capture: true
-notifications:
-  admin_email: "training@company.com"
-  success_alerts: true
-  progress_updates: daily`
+  progress_updates: hourly`
 };
 
 // Sample phishing campaigns
@@ -433,18 +186,6 @@ const sampleCaddyfiles = {
   }
   log {
     output file /var/log/caddy/executive-portal.log
-  }
-}`,
-  3: `onboarding.company.com {
-  tls {
-    protocols tls1.2 tls1.3
-    ciphers TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-  }
-  root * /var/www/onboarding
-  php_fastcgi unix//var/run/php-fpm.sock
-  file_server
-  log {
-    output file /var/log/caddy/onboarding.log
   }
 }`
 };
@@ -476,18 +217,6 @@ onMounted(async () => {
       yamlConfig: sampleYamlConfigs[2],
       caddyfile: sampleCaddyfiles[2],
       notes: 'Executive team showing better awareness than previous quarter. Still concerned about the 7% credential submission rate.'
-    },
-    {
-      id: 3,
-      name: 'New Hire Training',
-      target: 'New Employees',
-      status: 'Scheduled',
-      clickRate: 'N/A',
-      submittedCredentials: 'N/A',
-      htmlTemplate: sampleHtmlTemplates[3],
-      yamlConfig: sampleYamlConfigs[3],
-      caddyfile: sampleCaddyfiles[3],
-      notes: 'Campaign scheduled to begin next week. Will target all employees hired in the last 6 months.'
     }
   ]
   
@@ -970,122 +699,13 @@ const handleNotesChange = () => {
   }
 }
 
-// Add watches for all editable fields to better track unsaved changes
-
-// Handle phishlet file selection
-const handlePhishletFileChange = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    phishletFile.value = file
-    
-    // Read the file for preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const content = e.target.result
-        // Store content for later use
-        phishletFileContent.value = content
-      } catch (error) {
-        console.error('Error reading phishlet file:', error)
-        phishletUploadError.value = 'Error reading phishlet file'
-      }
-    }
-    reader.readAsText(file)
-  }
-}
-
 // Phishlet file content
 const phishletFileContent = ref('')
-
-// Upload phishlet
-const uploadPhishlet = async () => {
-  if (!phishletName.value) {
-    phishletUploadError.value = 'Please enter a phishlet name'
-    return
-  }
-  
-  if (!phishletFile.value) {
-    phishletUploadError.value = 'Please select a phishlet file'
-    return
-  }
-  
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // Add to the list
-    phishlets.value.unshift({
-      id: Date.now(),
-      name: phishletName.value,
-      uploadDate: new Date().toISOString().split('T')[0],
-      upvotes: 0,
-      downvotes: 0,
-      uploadedBy: 'current_user', // In a real app, use the logged-in user
-      content: phishletFileContent.value || '# Empty phishlet content'
-    })
-    
-    // Reset form
-    phishletName.value = ''
-    phishletFile.value = null
-    phishletFileContent.value = ''
-    
-    // Show success and hide modal
-    phishletUploadSuccess.value = true
-    setTimeout(() => {
-      phishletUploadSuccess.value = false
-      showPhishletUploadModal.value = false
-    }, 1500)
-    
-  } catch (error) {
-    console.error('Error uploading phishlet:', error)
-    phishletUploadError.value = 'Error uploading phishlet. Please try again.'
-  }
-}
-
-// Vote on a phishlet
-const voteOnPhishlet = (phishlet, isUpvote) => {
-  const index = phishlets.value.findIndex(p => p.id === phishlet.id)
-  if (index !== -1) {
-    if (isUpvote) {
-      phishlets.value[index].upvotes++
-    } else {
-      phishlets.value[index].downvotes++
-    }
-  }
-}
 
 // Add refs for tracking phishlet unsaved changes
 const hasUnsavedPhishletChanges = ref(false)
 const showPhishletCloseConfirmation = ref(false)
 const originalPhishlet = ref(null)
-
-// View phishlet details
-const viewPhishletDetails = (phishlet) => {
-  selectedPhishlet.value = JSON.parse(JSON.stringify(phishlet)); // Create a deep copy
-  originalPhishlet.value = JSON.parse(JSON.stringify(phishlet)); // Store original for comparison
-  editedPhishletContent.value = phishlet.content;
-  phishletNotes.value = phishlet.notes || ''; // Set the notes
-  isEditingPhishletContent.value = false;
-  phishletContentChanged.value = false;
-  isEditingRating.value = false;
-  directEditUpvotes.value = phishlet.upvotes;
-  directEditDownvotes.value = phishlet.downvotes;
-  hasUnsavedPhishletChanges.value = false;
-  phishletNotesChanged.value = false;
-  showPhishletDetailModal.value = true;
-}
-
-// Close phishlet detail modal
-const closePhishletDetailModal = () => {
-  showPhishletDetailModal.value = false
-  selectedPhishlet.value = null
-  isEditingPhishletContent.value = false
-}
-
-// Toggle editing phishlet content
-const toggleEditPhishletContent = () => {
-  isEditingPhishletContent.value = !isEditingPhishletContent.value
-}
 
 // Save edited phishlet content
 const savePhishletContent = () => {
@@ -1103,57 +723,6 @@ const savePhishletContent = () => {
   // Exit edit mode
   isEditingPhishletContent.value = false
   phishletContentChanged.value = false
-}
-
-// Copy phishlet content to clipboard
-const copyPhishletContent = async () => {
-  if (!selectedPhishlet.value) return
-
-  try {
-    await navigator.clipboard.writeText(selectedPhishlet.value.content)
-    clipboardContent.value = 'Phishlet content'
-    showClipboardNotification.value = true
-    setTimeout(() => {
-      showClipboardNotification.value = false
-    }, 2000)
-  } catch (err) {
-    console.error('Failed to copy phishlet content to clipboard:', err)
-    alert('Failed to copy to clipboard')
-  }
-}
-
-// Delete a phishlet
-const deletePhishlet = (phishlet) => {
-  if (confirm(`Are you sure you want to delete the phishlet "${phishlet.name}"?`)) {
-    const index = phishlets.value.findIndex(p => p.id === phishlet.id)
-    if (index !== -1) {
-      phishlets.value.splice(index, 1)
-    }
-  }
-}
-
-// Update votes directly from the detail modal
-const updatePhishletVotes = (isUpvote, increment) => {
-  if (!selectedPhishlet.value) return
-
-  if (isUpvote) {
-    // If incrementing, add one; if decrementing, subtract one
-    selectedPhishlet.value.upvotes += increment ? 1 : -1
-    // Ensure votes don't go below zero
-    if (selectedPhishlet.value.upvotes < 0) selectedPhishlet.value.upvotes = 0
-  } else {
-    // If incrementing, add one; if decrementing, subtract one
-    selectedPhishlet.value.downvotes += increment ? 1 : -1
-    // Ensure votes don't go below zero
-    if (selectedPhishlet.value.downvotes < 0) selectedPhishlet.value.downvotes = 0
-  }
-
-  // Find and update the phishlet in the list
-  const index = phishlets.value.findIndex(p => p.id === selectedPhishlet.value.id)
-  if (index !== -1) {
-    phishlets.value[index].upvotes = selectedPhishlet.value.upvotes
-    phishlets.value[index].downvotes = selectedPhishlet.value.downvotes
-  }
 }
 
 // Add a new ref for campaign artifacts
@@ -1196,8 +765,7 @@ const sampleArtifacts = {
       uploadDate: '2024-05-11',
       uploadedBy: 'analyst1'
     }
-  ],
-  3: []
+  ]
 }
 
 // Handle artifact file selection
@@ -1346,20 +914,6 @@ const updateCampaignInfo = () => {
   isEditingCampaignInfo.value = false
 }
 
-// Replace with these functions
-// Attempt to close the phishlet modal with confirmation if needed
-const attemptClosePhishletModal = () => {
-  const hasChanges = checkForUnsavedPhishletChanges();
-  
-  if (hasChanges) {
-    // Show confirmation dialog
-    showPhishletCloseConfirmation.value = true;
-  } else {
-    // No changes, just close
-    actuallyClosePhishletModal();
-  }
-}
-
 // The actual close modal function that doesn't check for changes
 const actuallyClosePhishletModal = () => {
   showPhishletDetailModal.value = false;
@@ -1369,75 +923,6 @@ const actuallyClosePhishletModal = () => {
   hasUnsavedPhishletChanges.value = false;
   isEditingPhishletContent.value = false;
   isEditingRating.value = false;
-}
-
-// Close phishlet modal and discard changes
-const discardPhishletChangesAndClose = () => {
-  showPhishletCloseConfirmation.value = false;
-  actuallyClosePhishletModal();
-}
-
-// Save all phishlet changes and close modal
-const saveAllPhishletChangesAndClose = () => {
-  // Save content if editing
-  if (isEditingPhishletContent.value) {
-    savePhishletContent();
-  }
-  
-  // Save rating if editing
-  if (isEditingRating.value) {
-    saveRatingEdits();
-  }
-  
-  // Save notes if changed
-  if (phishletNotesChanged.value) {
-    savePhishletNotes();
-  }
-  
-  // Close confirmation and modal
-  showPhishletCloseConfirmation.value = false;
-  actuallyClosePhishletModal();
-}
-
-// Check for unsaved phishlet changes
-const checkForUnsavedPhishletChanges = () => {
-  if (!selectedPhishlet.value || !originalPhishlet.value) return false;
-  
-  // Check for rating changes
-  if (isEditingRating.value &&
-      (directEditUpvotes.value !== selectedPhishlet.value.upvotes ||
-       directEditDownvotes.value !== selectedPhishlet.value.downvotes)) {
-    console.log("Phishlet rating has changed");
-    return true;
-  }
-  
-  // Check for content changes
-  if (isEditingPhishletContent.value && 
-      editedPhishletContent.value !== selectedPhishlet.value.content) {
-    console.log("Phishlet content has changed");
-    return true;
-  }
-  
-  // Check if upvotes or downvotes have changed from original
-  if (selectedPhishlet.value.upvotes !== originalPhishlet.value.upvotes ||
-      selectedPhishlet.value.downvotes !== originalPhishlet.value.downvotes) {
-    console.log("Phishlet votes have changed");
-    return true;
-  }
-  
-  // Check if content has changed from original
-  if (selectedPhishlet.value.content !== originalPhishlet.value.content) {
-    console.log("Phishlet content has changed from original");
-    return true;
-  }
-  
-  // Check if notes have changed
-  if (phishletNotes.value !== (originalPhishlet.value.notes || '')) {
-    console.log("Phishlet notes have changed");
-    return true;
-  }
-  
-  return false;
 }
 
 // Add to existing watch section
@@ -1508,121 +993,6 @@ const downloadArtifact = (artifact) => {
   }, 2000);
 }
 
-// Add a computed property for sorted phishlets
-const sortedPhishlets = computed(() => {
-  return [...phishlets.value].sort((a, b) => {
-    // Sort alphabetically by name
-    return a.name.localeCompare(b.name);
-  });
-});
-
-// Remove the JSZip mock and downloadCampaignAsZip function
-const JSZip = {
-  // This is a mock implementation for demo purposes
-  // In a real app, you would import the JSZip library
-  new: function() {
-    return {
-      file: function(name, content) {
-        console.log(`Adding file to zip: ${name}`);
-        return this;
-      },
-      generateAsync: function(options) {
-        return new Promise(resolve => {
-          setTimeout(() => {
-            resolve(new Blob(['Zip content here'], { type: 'application/zip' }));
-          }, 500);
-        });
-      }
-    };
-  }
-};
-
-// Replace the downloadCampaignAsZip function
-const downloadCampaignAsZip = async (campaign) => {
-  // Show a loading notification
-  clipboardContent.value = `Preparing zip package for "${campaign.name}"...`;
-  showClipboardNotification.value = true;
-  
-  try {
-    // In a real app, you would either:
-    // 1. Import and use JSZip library client-side to create the zip
-    // 2. Call an API endpoint to generate the zip server-side
-    
-    // Get the artifacts for this campaign
-    const artifacts = sampleArtifacts[campaign.id] || [];
-    
-    // Create a new zip file
-    const zip = JSZip.new();
-    
-    // Add campaign HTML template
-    zip.file(`${campaign.name}_email_template.html`, campaign.htmlTemplate);
-    
-    // Add campaign YAML config
-    zip.file(`${campaign.name}_config.yaml`, campaign.yamlConfig);
-    
-    // Add campaign Caddyfile
-    zip.file(`${campaign.name}_caddyfile`, campaign.caddyfile);
-    
-    // Add campaign notes if available
-    if (campaign.notes) {
-      zip.file(`${campaign.name}_notes.txt`, campaign.notes);
-    }
-    
-    // Add summary file with campaign details
-    const summaryContent = `Campaign: ${campaign.name}
-Target Group: ${campaign.target}
-Status: ${campaign.status}
-Click Rate: ${campaign.clickRate}
-Submitted Credentials: ${campaign.submittedCredentials}
-`;
-    zip.file(`${campaign.name}_summary.txt`, summaryContent);
-    
-    // Add all artifacts
-    artifacts.forEach(artifact => {
-      // In a real app, you would fetch the actual file content from the server
-      // For demo, we'll simulate different content based on file type
-      let content = `Sample content for ${artifact.name}`;
-      
-      if (artifact.type.includes('csv')) {
-        content = `id,name,email\n1,John Doe,john@example.com\n2,Jane Smith,jane@example.com`;
-      } else if (artifact.type.includes('pdf')) {
-        content = `%PDF-1.4\nSample PDF content for ${artifact.name}`;
-      } else if (artifact.type.includes('image')) {
-        content = `[This would be ${artifact.name} image data in a real app]`;
-      }
-      
-      // Add to zip in an artifacts folder
-      zip.file(`artifacts/${artifact.name}`, content);
-    });
-    
-    // Generate the zip file asynchronously
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    
-    // Create download link and trigger download
-    const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${campaign.name.replace(/\s+/g, '_')}_package.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Update notification
-    clipboardContent.value = `Campaign "${campaign.name}" package downloaded`;
-    setTimeout(() => {
-      showClipboardNotification.value = false;
-    }, 2000);
-    
-  } catch (error) {
-    console.error('Error creating campaign zip package:', error);
-    clipboardContent.value = `Error creating package for "${campaign.name}"`;
-    setTimeout(() => {
-      showClipboardNotification.value = false;
-    }, 2000);
-  }
-};
-
 // Add this new ref for project-specific metrics
 const projectMetrics = ref({
   1: [ // Campaign ID 1
@@ -1664,8 +1034,7 @@ const projectMetrics = ref({
       submissionRate: "14.3%",
       date: "2024-05-07"
     }
-  ],
-  3: [] // Campaign ID 3 - no projects yet
+  ]
 });
 
 // Calculate aggregate metrics for a campaign
@@ -1780,35 +1149,6 @@ const copyHtmlToClipboard = async () => {
     alert('Failed to copy to clipboard')
   }
 }
-
-// Add function to save phishlet notes
-const savePhishletNotes = () => {
-  if (!selectedPhishlet.value) return;
-  
-  // Update the selected phishlet
-  selectedPhishlet.value.notes = phishletNotes.value;
-  
-  // Find and update the phishlet in the list
-  const index = phishlets.value.findIndex(p => p.id === selectedPhishlet.value.id);
-  if (index !== -1) {
-    phishlets.value[index].notes = phishletNotes.value;
-  }
-  
-  // Reset change tracking
-  phishletNotesChanged.value = false;
-  
-  // Update original phishlet reference
-  if (originalPhishlet.value) {
-    originalPhishlet.value.notes = phishletNotes.value;
-  }
-
-  // Show notification
-  clipboardContent.value = 'Phishlet notes saved';
-  showClipboardNotification.value = true;
-  setTimeout(() => {
-    showClipboardNotification.value = false;
-  }, 2000);
-};
 </script>
 
 <template>
@@ -1816,16 +1156,10 @@ const savePhishletNotes = () => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Page Description -->
-        <div class="mb-8">
-          <h1 class="text-2xl font-bold text-white mb-2">Phishing Campaign Management</h1>
-          <p class="text-gray-400">
-            Manage phishing campaigns for security awareness training. Plan, execute, and track phishing simulations to test and improve your organization's security awareness.
-          </p>
-        </div>
+        <PageDescription title="Phishing Campaign Management" description="Manage phishing campaigns for security awareness training. Plan, execute, and track phishing simulations to test and improve your organization's security awareness." />
 
         <!-- Create New Campaign Section -->
-        <div class="bg-gray-800 shadow rounded-lg mb-8 p-6">
+        <div v-if="canEdit()" class="bg-gray-800 shadow rounded-lg mb-8 p-6">
           <h2 class="text-xl font-semibold text-white mb-4">Create New Campaign</h2>
           
           <div class="space-y-4">
@@ -1836,7 +1170,7 @@ const savePhishletNotes = () => {
                 type="text"
                 id="campaignName"
                 v-model="campaignName"
-                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
                 placeholder="Enter campaign name"
               />
             </div>
@@ -1848,7 +1182,7 @@ const savePhishletNotes = () => {
                 type="text"
                 id="targetGroup"
                 v-model="targetGroup"
-                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
                 placeholder="e.g., Marketing Team, All Users"
               />
             </div>
@@ -1861,7 +1195,7 @@ const savePhishletNotes = () => {
                 id="htmlTemplate"
                 @change="handleHtmlTemplateChange"
                 accept=".html"
-                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
               />
               <p class="mt-1 text-xs text-gray-400">Upload your HTML email template file</p>
             </div>
@@ -1874,7 +1208,7 @@ const savePhishletNotes = () => {
                 id="yamlConfig"
                 @change="handleYamlConfigChange"
                 accept=".yaml,.yml"
-                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
               />
               <p class="mt-1 text-xs text-gray-400">Upload your YAML configuration file</p>
             </div>
@@ -1886,10 +1220,10 @@ const savePhishletNotes = () => {
             <div v-if="uploadSuccess" class="text-green-400 text-sm">Campaign created successfully!</div>
             
             <!-- Submit Button -->
-            <div>
+            <div class="flex justify-center">
               <button
                 @click="createCampaign"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
               >
                 Create Campaign
               </button>
@@ -1948,71 +1282,9 @@ const savePhishletNotes = () => {
             </table>
           </div>
         </div>
-
-        <!-- Phishing Tools Section -->
-        <div>
-          <h2 class="text-xl font-semibold text-white mb-4">Phishlet Tracking</h2>
-          <div class="bg-gray-800 shadow overflow-hidden rounded-lg mb-4">
-            <div class="p-4 flex justify-between items-center">
-              <div>
-                <p class="text-gray-400 text-sm">Track and manage standalone phishlets for use in your campaigns</p>
-              </div>
-              <button
-                @click="showPhishletUploadModal = true"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Upload Phishlet
-              </button>
-            </div>
-            
-            <table class="min-w-full divide-y divide-gray-700">
-              <thead class="bg-gray-700">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/3">
-                    Phishlet Name
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/3">
-                    Upload Date
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/3">
-                    Uploaded By
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-gray-800 divide-y divide-gray-700">
-                <tr v-for="phishlet in sortedPhishlets" :key="phishlet.id" class="hover:bg-gray-700">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white cursor-pointer" @click="viewPhishletDetails(phishlet)">
-                    {{ phishlet.name }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 cursor-pointer" @click="viewPhishletDetails(phishlet)">
-                    {{ phishlet.uploadDate }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300 cursor-pointer" @click="viewPhishletDetails(phishlet)">
-                    {{ phishlet.uploadedBy }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button @click="viewPhishletDetails(phishlet)" class="text-blue-400 hover:text-blue-300 mr-3">
-                      View
-                    </button>
-                    <button @click="deletePhishlet(phishlet)" class="text-red-400 hover:text-red-300">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="phishlets.length === 0">
-                  <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400">
-                    No phishlets found
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </main>
+    <Footer />
     
     <!-- Campaign Details Modal -->
     <div v-if="showCampaignModal" class="fixed inset-0 z-50 overflow-y-auto">
@@ -2592,156 +1864,13 @@ const savePhishletNotes = () => {
     <div v-if="showClipboardNotification" class="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded shadow-lg z-50">
       {{ clipboardContent }} copied to clipboard
     </div>
-    
-    <!-- Phishlet Details Modal -->
-    <div v-if="showPhishletDetailModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <!-- Modal Backdrop -->
-      <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity" @click="attemptClosePhishletModal"></div>
-      
-      <!-- Modal Content -->
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-5xl sm:w-full relative mx-auto my-8">
-          <!-- Modal Header -->
-          <div class="bg-gray-700 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-lg font-medium text-white">
-              Phishlet Details: {{ selectedPhishlet?.name }}
-            </h3>
-            <button 
-              @click="attemptClosePhishletModal" 
-              class="text-gray-400 hover:text-white focus:outline-none"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          <!-- Modal Body -->
-          <div class="p-6 bg-gray-800">
-            <!-- Phishlet Information -->
-            <div class="mb-6">
-              <h4 class="text-md font-medium text-white mb-3">Phishlet Information</h4>
-              <div class="grid grid-cols-2 gap-2 bg-gray-700 rounded-lg p-4">
-                <div class="text-sm text-gray-400">Uploaded By:</div>
-                <div class="text-sm text-white">{{ selectedPhishlet?.uploadedBy }}</div>
-                
-                <div class="text-sm text-gray-400">Upload Date:</div>
-                <div class="text-sm text-white">{{ selectedPhishlet?.uploadDate }}</div>
-                
-            </div>
-            </div>
-            
-            <!-- Phishlet Content -->
-            <div>
-              <div class="flex justify-between items-center mb-2">
-                <h4 class="text-md font-medium text-white">Phishlet Content</h4>
-                <div class="space-x-2">
-                  <button 
-                    v-if="!isEditingPhishletContent"
-                    @click="copyPhishletContent" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-2 rounded"
-                  >
-                    Copy
-                  </button>
-                  <button 
-                    v-if="!isEditingPhishletContent"
-                    @click="toggleEditPhishletContent" 
-                    class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-medium py-1 px-2 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    v-if="isEditingPhishletContent"
-                    @click="savePhishletContent" 
-                    class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded"
-                  >
-                    Save
-                  </button>
-                  <button 
-                    v-if="isEditingPhishletContent"
-                    @click="toggleEditPhishletContent" 
-                    class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-2 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-              <textarea
-                v-model="editedPhishletContent"
-                :readonly="!isEditingPhishletContent"
-                @input="phishletContentChanged = true"
-                class="w-full bg-gray-700 border-gray-600 rounded-md text-white p-3 font-mono"
-                rows="15"
-                style="resize: vertical;"
-              ></textarea>
-            </div>
-            
-            <!-- Phishlet Notes -->
-            <div class="mt-4">
-              <div class="flex justify-between items-center mb-2">
-                <h4 class="text-md font-medium text-white">Phishlet Notes</h4>
-                <button 
-                  @click="savePhishletNotes" 
-                  class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded"
-                >
-                  Save Notes
-                </button>
-              </div>
-              <textarea
-                v-model="phishletNotes"
-                @input="phishletNotesChanged = true"
-                class="w-full bg-gray-700 border-gray-600 rounded-md text-white p-3"
-                style="height: 400px; resize: none;"
-                placeholder="Add notes about this phishlet..."
-              ></textarea>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-    </div>
-    
-    <!-- Phishlet Close Confirmation Modal -->
-    <div v-if="showPhishletCloseConfirmation" class="fixed inset-0 z-60 overflow-y-auto">
-      <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity"></div>
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full relative mx-auto">
-          <div class="bg-gray-700 px-6 py-4">
-            <h3 class="text-lg font-medium text-white">Unsaved Phishlet Changes</h3>
-          </div>
-          <div class="p-6 bg-gray-800">
-            <p class="text-white">You have unsaved changes to this phishlet. What would you like to do?</p>
-          </div>
-          <div class="bg-gray-700 px-6 py-4 flex justify-end space-x-3">
-            <button 
-              @click="discardPhishletChangesAndClose" 
-              class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded"
-            >
-              Discard Changes
-            </button>
-            <button 
-              @click="saveAllPhishletChangesAndClose" 
-              class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
-            >
-              Save All Changes
-            </button>
-            <button 
-              @click="showPhishletCloseConfirmation = false" 
-              class="bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <style scoped>
-/* Add any component-specific styles here */
-th:nth-child(4):has(content="Duration"), 
-td:nth-child(4):has(content*="to") {
+/* Hide the 4th column directly, avoid :has selector for compatibility */
+th:nth-child(4), 
+td:nth-child(4) {
   display: none !important;
 }
 
