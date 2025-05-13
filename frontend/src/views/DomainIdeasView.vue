@@ -1,6 +1,7 @@
 <script setup>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
+import PageDescription from '@/components/PageDescription.vue'
 import { inject, ref, onMounted, computed } from 'vue'
 
 const pocketbase = inject('$pocketbase')
@@ -208,14 +209,7 @@ onMounted(() => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Page Description -->
-        <div class="mb-8">
-          <h1 class="text-2xl font-bold text-white mb-2">Domain Ideas</h1>
-          <p class="text-gray-400">
-            This page is for collecting domain name ideas that could be valuable additions to our portfolio.
-            Add domains you think would be worth purchasing, along with your reasoning and estimated price.
-          </p>
-        </div>
+        <PageDescription title="Domain Ideas" description="This page is for collecting domain name ideas that could be valuable additions to our portfolio. Add domains you think would be worth purchasing, along with your reasoning and estimated price." />
 
         <!-- Add New Domain Form -->
         <div v-if="!isViewer" class="bg-gray-800 shadow rounded-lg mb-8">

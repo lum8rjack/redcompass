@@ -1,7 +1,7 @@
 <script setup>
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
-
+import PageDescription from '@/components/PageDescription.vue'
 const categorizationServices = [
     {
         name: 'Barracuda',
@@ -89,14 +89,7 @@ const categorizationServices = [
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Page Description -->
-        <div class="mb-8">
-          <h1 class="text-2xl font-bold text-white mb-2">Domain Categorization</h1>
-          <p class="text-gray-400">
-            Domain categorization is a crucial aspect of web security and content filtering. It helps organizations ensure their domains are properly classified for business use, prevent legitimate domains from being blocked by security filters, maintain appropriate content categorization for compliance, and improve visibility and accessibility of business websites.
-          </p>
-        </div>
-
+        <PageDescription title="Domain Categorization" description="Domain categorization is a crucial aspect of web security and content filtering. It helps organizations ensure their domains are properly classified for business use, prevent legitimate domains from being blocked by security filters, maintain appropriate content categorization for compliance, and improve visibility and accessibility of business websites." />
         <!-- Services Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div v-for="service in categorizationServices" :key="service.name" 
