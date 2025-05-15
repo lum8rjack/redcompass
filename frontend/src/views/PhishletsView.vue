@@ -111,7 +111,10 @@ function updateMessageBox(message) {
 }
 
 async function createPhishlet() {
-  if (!newPhishletName.value || !newPhishletContent.value) return
+  if (!newPhishletName.value || !newPhishletContent.value) {
+    updateMessageBox('Error: You must provide a name and phishlet content')
+    return
+  }
   try {
 
     // Create project in Pocketbase
@@ -325,36 +328,25 @@ function cancelDeletePhishlet() {
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteConfirmModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity" @click="cancelDeletePhishlet"></div>
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-3xl w-full relative mx-auto my-8">
-          <div class="bg-gray-700 px-6 py-4 flex items-center justify-between">
-            <h3 class="text-lg font-medium text-white">
-              Confirm Delete
-            </h3>
-            <button 
-              @click="cancelDeletePhishlet" 
-              class="text-gray-400 hover:text-white focus:outline-none"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="p-6 bg-gray-800">
-            <p class="text-sm text-gray-300 mb-4">
-              Are you sure you want to delete the phishlet '{{ phishletToDelete?.Name }}'? This action cannot be undone.
-            </p>
-            <div class="flex justify-end">
-              <button
-                @click="confirmDeletePhishlet"
-                class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-4 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+    <div v-if="showDeleteConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-medium text-white">Confirm Delete</h3>
+        <p class="text-sm text-gray-300 mb-4">
+          Are you sure you want to delete the phishlet '{{ phishletToDelete?.Name }}'? This action cannot be undone.
+        </p>
+        <div class="flex justify-end space-x-4">
+          <button
+            @click="cancelDeletePhishlet"
+            class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDeletePhishlet"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            Confirm
+          </button>
         </div>
       </div>
     </div>
