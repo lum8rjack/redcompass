@@ -26,16 +26,16 @@ const handleSort = (key) => {
 }
 
 async function getPhishlets() {
-    try {
-        const response = await pocketbase.collection('Phishlets').getFullList({
-            sort: 'Name',
-            fields: 'id,Name,expand.Uploaded_By,Phishlet,Notes,updated',
-            expand: 'Uploaded_By',
-        });
-        phishlets.value = response;
-    } catch (error) {
-        console.error('Error fetching phishlets:', error)
-    }
+  try {
+      const response = await pocketbase.collection('Phishlets').getFullList({
+          sort: 'Name',
+          fields: 'id,Name,expand.Uploaded_By,Phishlet,Notes,updated',
+          expand: 'Uploaded_By',
+      });
+      phishlets.value = response;
+  } catch (error) {
+      console.error('Error fetching phishlets:', error)
+  }
 }
 
 onMounted(async () => {
