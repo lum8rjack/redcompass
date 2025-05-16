@@ -86,7 +86,8 @@ async function updateCampaignInfo() {
       Target_Group: editedTargetGroup.value,
       Notes: editedCampaignNotes.value,
       Example_Subject: editedSubject.value,
-      Example_From: editedFrom.value
+      Example_From: editedFrom.value,
+      Updated_By: pocketbase.authStore.model.id,
     });
 
     campaign.value.name = editedCampaignName.value
@@ -120,7 +121,8 @@ async function updateCaddyfile(newCaddyfile) {
   if (!campaign.value) return
   try {
     await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
-      Caddy: newCaddyfile
+      Caddy: newCaddyfile,
+      Updated_By: pocketbase.authStore.model.id,
     });
   } catch(err) {
     throw err
@@ -165,7 +167,8 @@ async function saveHtmlTemplateToBackend(htmlTemplate) {
   if (!campaign.value) return;
   try {
     await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
-      HTML: htmlTemplate
+      HTML: htmlTemplate,
+      Updated_By: pocketbase.authStore.model.id,
     });
   } catch (err) {
     throw err
@@ -278,6 +281,7 @@ function cancelHtmlEdit() {
                 </div>
                 <div v-else class="flex gap-2">
                   <button
+                    v-if="canEdit()"
                     @click="toggleHtmlEdit"
                     class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded"
                   >
@@ -338,7 +342,7 @@ function cancelHtmlEdit() {
                 }">
                   {{ caddyfileMessage }}
                 </p>
-                <div class="flex space-x-2">
+                <div v-if="canEdit()" class="flex space-x-2">
                   <button 
                     v-if="!isEditingCaddyfile"
                     @click="toggleEditCaddyfile" 
