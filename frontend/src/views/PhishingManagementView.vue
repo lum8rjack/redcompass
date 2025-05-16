@@ -4,6 +4,7 @@ import Footer from '@/components/Footer.vue'
 import PageDescription from '@/components/PageDescription.vue'
 import { ref, inject, onMounted, computed } from 'vue'
 import { canEdit } from '@/utils/auth'
+import { calculatePercentage } from '@/utils/calculateStats'
 const pocketbase = inject('$pocketbase')
 
 // For file uploads
@@ -57,7 +58,7 @@ const sortedPhishingCampaigns = computed(() => {
 async function getPhishingCampaigns() {
   try {
     const response = await pocketbase.collection('Phishing_Campaign_View').getFullList({
-        fields: 'id, Name, Target_Group, total_clicked, total_submit',
+        fields: 'id, Name, Target_Group, total_sent, total_clicked, total_submit',
         sort: 'Name',
     });
     phishingCampaigns.value = response;
@@ -201,7 +202,7 @@ const onHtmlFileChange = (event) => {
             
             <!-- HTML Template Upload -->
             <div>
-              <label for="htmlTemplate" class="block text-sm font-medium text-white">HTML Email Template</label>
+              <label for="htmlTemplateFile" class="block text-sm font-medium text-white">HTML Email Template</label>
               <input
                 type="file"
                 id="htmlTemplateFile"
@@ -290,10 +291,10 @@ const onHtmlFileChange = (event) => {
                     {{ campaign.Target_Group }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {{ campaign.total_clicked ? campaign.total_clicked : 0 }}%
+                    {{ calculatePercentage(campaign.total_sent, campaign.total_clicked) }}%
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {{ campaign.total_submit ? campaign.total_submit : 0 }}%
+                    {{ calculatePercentage(campaign.total_sent, campaign.total_submit) }}%
                   </td>
                 </tr>
                 <tr v-if="sortedPhishingCampaigns.length === 0">
