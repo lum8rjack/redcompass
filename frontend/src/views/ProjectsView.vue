@@ -4,7 +4,7 @@ import Footer from '@/components/Footer.vue'
 import { ref, computed, inject, onMounted } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { formatDate } from '@/utils/dateUtils'
-
+import PageDescription from '@/components/PageDescription.vue'
 const pocketbase = inject('$pocketbase');
 
 const availableUsers = ref([])
@@ -122,7 +122,7 @@ const handleCreateProject = async () => {
       "Project_Members": newProject.value.selectedUsers,
       "Completed": false
     };
-    console.log("data created:" , data);
+    
     await pocketbase.collection('Projects').create(data);
     const response = await pocketbase.collection('Projects').getFullList({
       sort: 'Start_Date',
@@ -208,13 +208,7 @@ const calculateProgress = (startDate, endDate) => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Page Description -->
-        <div class="mb-8">
-          <h1 class="text-2xl font-bold text-white mb-2">Project Management</h1>
-          <p class="text-gray-400">
-            Manage your projects, track their progress, and assign team members. Create new projects and monitor their status from start to completion.
-          </p>
-        </div>
+        <PageDescription title="Project Management" description="Manage your projects, track their progress, and assign team members. Create new projects and monitor their status from start to completion." />
 
         <!-- Project Creation Form -->
         <div v-if="!isViewer" class="bg-gray-800 shadow rounded-lg mb-6">

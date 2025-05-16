@@ -8,10 +8,41 @@
         </a>
       </div>
       <div class="flex lg:gap-x-12">
-        <a href="/domains" class="text-md font-semibold leading-6 text-white">Domains</a>
-        <a href="/projects" class="text-md font-semibold leading-6 text-white">Projects</a>
-        <a href="/categorizations" class="text-md font-semibold leading-6 text-white">Categorizations</a>
-        <a href="/domain-ideas" class="text-md font-semibold leading-6 text-white">Domain Ideas</a>
+        <a href="/domains" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Domains</a>
+        <a href="/projects" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Projects</a>
+        <a href="/categorizations" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Categorizations</a>
+        <div class="relative">
+          <button 
+            @click.stop="togglePhishingDropdown"
+            class="text-md font-semibold leading-6 text-white hover:text-gray-200 flex items-center"
+          >
+            Phishing
+            <svg class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          
+          <div
+            v-if="isPhishingDropdownOpen" 
+            class="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5"
+          >
+            <div class="py-1">
+              <a
+                href="/phishing"
+                class="block px-4 py-2 text-sm text-white hover:bg-gray-600"
+              >
+                Campaigns
+              </a>
+              <a
+                href="/phishlets"
+                class="block px-4 py-2 text-sm text-white hover:bg-gray-600"
+              >
+                Phishlets
+              </a>
+            </div>
+          </div>
+        </div>
+        <a href="/domain-ideas" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Domain Ideas</a>
       </div>
       <div class="flex lg:flex-1 lg:justify-end">
         <div class="relative avatar-dropdown">
@@ -74,7 +105,7 @@ const pocketbase = inject('$pocketbase')
 const isDropdownOpen = ref(false)
 const avatarUrl = ref('')
 const isAdmin = ref(false)
-
+const isPhishingDropdownOpen = ref(false)
 onMounted(async () => {
   try {
     const url = pocketbase.files.getURL(pocketbase.authStore.model, pocketbase.authStore.model.avatar);
@@ -89,6 +120,10 @@ onMounted(async () => {
 
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
+}
+
+const togglePhishingDropdown = () => {
+  isPhishingDropdownOpen.value = !isPhishingDropdownOpen.value
 }
 
 const handleLogout = async () => {
@@ -114,4 +149,8 @@ if (typeof window !== 'undefined') {
 </script>
 
 <style scoped>
+/* Add some hover effects for navigation links */
+a {
+  transition: all 0.2s ease;
+}
 </style> 

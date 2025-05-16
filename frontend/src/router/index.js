@@ -8,10 +8,16 @@ import ProjectView from '@/views/ProjectView.vue'
 import DomainView from '@/views/DomainView.vue'
 import CategorizationsView from '../views/CategorizationsView.vue'
 import DomainIdeasView from '../views/DomainIdeasView.vue'
+import PhishingCampaignView from '@/views/PhishingCampaignView.vue'
+import PhishingManagementView from '../views/PhishingManagementView.vue'
+import PhishletsView from '../views/PhishletsView.vue'
 import { isAuthenticated } from '@/utils/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: (to, from, savedPosition) => {
+    return { top: 0 }
+  },
   strict: true,
   routes: [
     {
@@ -24,6 +30,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { requiresAuth: false, description: 'Login' },
       beforeEnter: (to, from, next) => {
         if (isAuthenticated()) {
           next('/domains')
@@ -33,52 +40,70 @@ const router = createRouter({
       }
     },
     {
+      path: '/categorizations',
+      name: 'categorizations',
+      component: CategorizationsView,
+      meta: { requiresAuth: true, description: 'Categorization Management' }
+    },
+    {
       path: '/domains',
       name: 'domains',
       component: DomainsView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/domain-ideas',
-      name: 'domain-ideas',
-      component: DomainIdeasView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: ProfileView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/projects',
-      name: 'projects',
-      component: ProjectsView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView,
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/project/:id',
-      name: 'project',
-      component: ProjectView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, description: 'Domain Management' }
     },
     {
       path: '/domain/:id',
       name: 'domain',
       component: DomainView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, description: 'Domain Details' }
     },
     {
-      path: '/categorizations',
-      name: 'categorizations',
-      component: CategorizationsView,
-      meta: { requiresAuth: true }
+      path: '/domain-ideas',
+      name: 'domain-ideas',
+      component: DomainIdeasView,
+      meta: { requiresAuth: true, description: 'Domain Ideas' }
+    },
+    {
+      path: '/phishing',
+      name: 'phishing',
+      component: PhishingManagementView,
+      meta: { requiresAuth: true, description: 'Phishing Campaign Management' }
+    },
+    {
+      path: '/phishing/:id',
+      name: 'phishing-campaign',
+      component: PhishingCampaignView,
+      meta: { requiresAuth: true, description: 'Phishing Campaign Details' }
+    },
+    {
+      path: '/phishlets',
+      name: 'phishlets',
+      component: PhishletsView,
+      meta: { requiresAuth: true, description: 'Phishlet Management' }
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { requiresAuth: true, description: 'Profile' }
+    },
+    {
+      path: '/projects',
+      name: 'projects',
+      component: ProjectsView,
+      meta: { requiresAuth: true, description: 'Projects' }
+    },
+    {
+      path: '/project/:id',
+      name: 'project',
+      component: ProjectView,
+      meta: { requiresAuth: true, description: 'Project Details' }
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
+      meta: { requiresAuth: true, description: 'Settings' }
     }
   ]
 })
