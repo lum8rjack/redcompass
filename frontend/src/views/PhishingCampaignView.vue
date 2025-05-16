@@ -291,11 +291,16 @@ async function uploadArtifact() {
       Phishing_Campaign: campaign.value.id,
       Uploaded_By: pocketbase.authStore.model.id,
     })
-    // Refresh the artifacts list
+    
     artifacts.value = await pocketbase.collection('Artifacts').getFullList({
       fields: 'id, Name, Description, File',
       filter: `Phishing_Campaign = "${campaign.value.id}"`
     })
+
+    artifactName.value = ''
+    artifactDescription.value = ''
+    artifactFile.value = null
+
     artifactMessage.value = 'Successfully uploaded artifact'
     setTimeout(() => { artifactMessage.value = '' }, 2000);
   } catch(err) {
