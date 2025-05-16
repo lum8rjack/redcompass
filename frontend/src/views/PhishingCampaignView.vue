@@ -28,6 +28,14 @@ const campaignMessage = ref('')
 const htmlMessage = ref('')
 const phishletMessage = ref('')
 const caddyfileMessage = ref('')
+const phishlets = ref([])
+const isEditingPhishlet = ref(false)
+const selectedPhishletId = ref('')
+const artifactName = ref('')
+const artifactDescription = ref('')
+const artifactFile = ref(null)
+const artifacts = ref([]);
+const artifactMessage = ref('');
 onMounted(async () => {
   try {
     const campaignId = route.params.id;
@@ -37,12 +45,17 @@ onMounted(async () => {
       fields: 'Name, Notes, Caddy, Example_From, Example_Subject, Target_Group, expand.Phishlet, HTML',
       expand: 'Phishlet'
     });
-    console.log("record", record)
 
     const stats = await pocketbase.collection('Phishing_Campaign_View').getOne(campaignId, {
         fields: 'id, Name, Target_Group, total_sent, total_clicked, total_submit',
     });
-    console.log("stats", stats)
+
+    const artifactsList = await pocketbase.collection('Artifacts').getFullList({
+      fields: 'id, Name, Description, File',
+      filter: `Phishing_Campaign = "${campaignId}"`
+    });
+
+    artifacts.value = artifactsList
 
     let tempPhishlet = record.expand.Phishlet || {}
     // Map backend fields to local campaign object
@@ -70,9 +83,12 @@ onMounted(async () => {
     editedSubject.value = campaign.value.subject;
     editedFrom.value = campaign.value.from;
     originalCampaign.value = JSON.parse(JSON.stringify(campaign.value));
+
+    // Fetch all phishlets for dropdown
+    const phishletList = await pocketbase.collection('Phishlets').getFullList({ fields: 'id,Name' });
+    phishlets.value = phishletList;
   } catch (err) {
     error.value = 'Failed to load campaign details';
-    console.error(err);
   } finally {
     loading.value = false;
   }
@@ -100,7 +116,6 @@ async function updateCampaignInfo() {
       campaignMessage.value = ''
     }, 2000)
   } catch(err) {
-    console.error('Failed to update campaign info:', err);
     campaignMessage.value = 'Error updating campaign info'
     setTimeout(() => {
       campaignMessage.value = ''
@@ -139,7 +154,6 @@ async function saveCaddyfile() {
       caddyfileMessage.value = ''
     }, 2000)
   } catch(err) {
-    console.error('Failed to save Caddyfile:', err);
     caddyfileMessage.value = 'Error updating Caddyfile'
     setTimeout(() => {
       caddyfileMessage.value = ''
@@ -190,7 +204,6 @@ async function toggleHtmlEdit() {
         htmlMessage.value = ''
       }, 2000)
     } catch(err) {
-      console.error('Failed to save HTML template:', err);
       htmlMessage.value = 'Error updating HTML template'
       setTimeout(() => {
         htmlMessage.value = ''
@@ -204,6 +217,103 @@ async function toggleHtmlEdit() {
 function cancelHtmlEdit() {
   isEditingHtml.value = false;
   editedHtml.value = '';
+}
+
+function toggleEditPhishlet() {
+  isEditingPhishlet.value = !isEditingPhishlet.value;
+  if (isEditingPhishlet.value) {
+    // Set the dropdown to the current phishlet id
+    const current = phishlets.value.find(p => p.Name === campaign.value.phishletName);
+    selectedPhishletId.value = current ? current.id : '';
+  }
+}
+
+async function savePhishlet() {
+  if (!campaign.value) return;
+  try {
+    await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
+      Phishlet: selectedPhishletId.value,
+      Updated_By: pocketbase.authStore.model.id,
+    });
+    // Update local state
+    const selected = phishlets.value.find(p => p.id === selectedPhishletId.value);
+    campaign.value.yamlConfig = selected ? selected.Phishlet : '';
+    campaign.value.phishletName = selected ? selected.Name : '';
+    phishletMessage.value = 'Successfully updated phishlet';
+    setTimeout(() => { phishletMessage.value = '' }, 2000);
+  } catch (err) {
+    phishletMessage.value = 'Error updating phishlet';
+    setTimeout(() => { phishletMessage.value = '' }, 2000);
+  } finally {
+    isEditingPhishlet.value = false;
+  }
+}
+
+function cancelEditPhishlet() {
+  isEditingPhishlet.value = false;
+  selectedPhishletId.value = '';
+}
+
+function onArtifactFileChange(event) {
+  artifactFile.value = event.target.files[0] || null;
+}
+
+async function deleteArtifact(id) {
+  try {
+    await pocketbase.collection('Artifacts').delete(id)
+    artifacts.value = artifacts.value.filter(artifact => artifact.id !== id)
+    artifactMessage.value = 'Successfully deleted artifact'
+    setTimeout(() => { artifactMessage.value = '' }, 2000);
+  } catch(err) {
+    artifactMessage.value = 'Error deleting artifact'
+    setTimeout(() => { artifactMessage.value = '' }, 2000);
+  }
+}
+
+async function uploadArtifact() {
+  try {
+    if (!artifactFile.value) {
+      artifactMessage.value = 'Error: Please select a file to upload'
+      setTimeout(() => { artifactMessage.value = '' }, 2000);
+      return
+    }
+
+    if (!artifactName.value) {
+      artifactMessage.value = 'Error: Please enter a name for the artifact'
+      setTimeout(() => { artifactMessage.value = '' }, 2000);
+      return
+    }
+    
+    await pocketbase.collection('Artifacts').create({
+      Name: artifactName.value,
+      Description: artifactDescription.value,
+      File: artifactFile.value,
+      Phishing_Campaign: campaign.value.id,
+      Uploaded_By: pocketbase.authStore.model.id,
+    })
+    // Refresh the artifacts list
+    artifacts.value = await pocketbase.collection('Artifacts').getFullList({
+      fields: 'id, Name, Description, File',
+      filter: `Phishing_Campaign = "${campaign.value.id}"`
+    })
+    artifactMessage.value = 'Successfully uploaded artifact'
+    setTimeout(() => { artifactMessage.value = '' }, 2000);
+  } catch(err) {
+    artifactMessage.value = 'Error uploading artifact'
+    setTimeout(() => { artifactMessage.value = '' }, 2000);
+  }
+}
+
+async function downloadArtifact(id) {
+  try {
+    const fileToken = await pocketbase.files.getToken();
+    const artifact = await pocketbase.collection('Artifacts').getOne(id)
+    const url = pocketbase.files.getURL(artifact, artifact.File, {'token': fileToken})
+    window.open(url, '_blank')
+  } catch(err) {
+    artifactMessage.value = 'Error downloading artifact'
+    setTimeout(() => { artifactMessage.value = '' }, 2000);
+  }
 }
 </script>
 
@@ -316,9 +426,17 @@ function cancelHtmlEdit() {
             <!-- Phishlet Configuration -->
             <div class="mb-8">
               <div class="flex justify-between items-center mb-2">
-                <h4 class="text-md font-medium text-white">Phishlet Configuration: 
-                  <a v-if="campaign.phishletName !== ''" href="/phishlets" target="_blank" class="text-blue-500 hover:text-blue-600">{{ campaign.phishletName }}</a>
-                  <span v-else>No phishlet selected</span>
+                <h4 class="text-md font-medium text-white">Phishlet Configuration:
+                  <template v-if="!isEditingPhishlet">
+                    <a v-if="campaign.phishletName !== ''" href="/phishlets" target="_blank" class="text-blue-500 hover:text-blue-600">{{ campaign.phishletName }}</a>
+                    <span v-else>No phishlet selected</span>
+                  </template>
+                  <template v-else>
+                    <select v-model="selectedPhishletId" class="ml-2 bg-gray-700 text-white rounded px-2 py-1">
+                      <option value="" disabled>Select a phishlet</option>
+                      <option v-for="p in phishlets" :key="p.id" :value="p.id">{{ p.Name }}</option>
+                    </select>
+                  </template>
                 </h4>
                 <p v-if="phishletMessage" class="text-sm text-center" :class="{
                   'text-green-400': phishletMessage.includes('Success'),
@@ -326,6 +444,13 @@ function cancelHtmlEdit() {
                 }">
                   {{ phishletMessage }}
                 </p>
+                <div v-if="canEdit() && !isEditingPhishlet">
+                  <button @click="toggleEditPhishlet" class="bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium py-1 px-3 rounded">Edit</button>
+                </div>
+                <div v-else-if="isEditingPhishlet" class="flex gap-2">
+                  <button @click="savePhishlet" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded">Save</button>
+                  <button @click="cancelEditPhishlet" class="bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium py-1 px-3 rounded">Cancel</button>
+                </div>
               </div>
               <div class="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto">
                 <pre class="text-sm text-gray-300 whitespace-pre-wrap font-mono">{{ campaign.yamlConfig }}</pre>
@@ -333,7 +458,7 @@ function cancelHtmlEdit() {
             </div>
 
             <!-- Caddyfile Section -->
-            <div>
+            <div class="mb-8">
               <div class="flex justify-between items-center mb-2">
                 <h4 class="text-md font-medium text-white">Caddyfile</h4>
                 <p v-if="caddyfileMessage" class="text-sm text-center" :class="{
@@ -376,6 +501,88 @@ function cancelHtmlEdit() {
                   rows="12"
                   style="resize: vertical;"
                 ></textarea>
+              </div>
+            </div>
+
+            <!-- Campaign Artifacts Section -->
+            <div class="mb-8">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="text-md font-medium text-white">Campaign Artifacts</h4>
+              </div>
+              <p v-if="artifactMessage" class="text-sm text-center w-full mb-2" :class="{
+                'text-green-400': artifactMessage.includes('Success'),
+                'text-red-400': artifactMessage.includes('Error')
+              }">
+                {{ artifactMessage }}
+              </p>
+              <div v-if="canEdit()" class="space-y-4">
+                <div>
+                  <label for="artifactName" class="block text-sm font-medium text-white">Artifact Name</label>
+                  <input
+                    required
+                    type="text"
+                    id="artifactName"
+                    v-model="artifactName"
+                    class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2 text-sm"
+                    placeholder="Enter artifact name"
+                  />
+                </div>
+                <div>
+                  <label for="artifactDescription" class="block text-sm font-medium text-white">Description</label>
+                  <textarea
+                    id="artifactDescription"
+                    v-model="artifactDescription"
+                    class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-gray-500 focus:ring-opacity-50 text-white p-2 text-sm"
+                    rows="1"
+                    placeholder="Enter artifact description"
+                  ></textarea>
+                </div>
+                <div>
+                  <label for="artifactFile" class="block text-sm font-medium text-white">File</label>
+                  <input
+                    required
+                    type="file"
+                    id="artifactFile"
+                    @change="onArtifactFileChange"
+                    class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-gray-500 focus:ring-opacity-50 text-white py-1.5 pl-2 text-sm"
+                  />
+                </div>
+                <div class="flex justify-center">
+                  <button
+                    @click="uploadArtifact"
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded"
+                  >
+                    Upload Artifact
+                  </button>
+                </div>
+              </div>
+              <!-- Artifacts Table -->
+              <div class="mt-8">
+                <table class="min-w-full divide-y divide-gray-700">
+                  <thead class="bg-gray-700">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">File</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-gray-800 divide-y divide-gray-700">
+                    <tr v-for="artifact in artifacts" :key="artifact.id">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ artifact.Name }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ artifact.Description }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ artifact.File }}</td>
+                      <td v-if="canEdit()" class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button @click="downloadArtifact(artifact.id)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded mr-2">Download</button>
+                        <button @click="deleteArtifact(artifact.id)" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded">Delete</button>
+                      </td>
+                      <td v-else class="px-6 py-4 whitespace-nowrap text-sm"></td>
+                    </tr>
+                    <tr v-if="artifacts.length === 0">
+                      <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-400">No artifacts uploaded</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
