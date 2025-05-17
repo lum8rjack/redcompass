@@ -57,7 +57,7 @@ const sortedPhishingCampaigns = computed(() => {
 
 async function getPhishingCampaigns() {
   try {
-    const response = await pocketbase.collection('Phishing_Campaign_View').getFullList({
+    const response = await pocketbase.collection('Phishing_Templates_View').getFullList({
         fields: 'id, Name, Target_Group, total_sent, total_clicked, total_submit',
         sort: 'Name',
     });
@@ -108,12 +108,12 @@ const createCampaign = async () => {
       "Updated_By": pocketbase.authStore.model.id,
     };
     
-    await pocketbase.collection('Phishing_Campaign').create(data);
+    await pocketbase.collection('Phishing_Templates').create(data);
     
-    updateMessageBox('Successfully created phishing campaign!')
+    updateMessageBox('Successfully created phishing template!')
     await getPhishingCampaigns()
   } catch (error) {
-    updateMessageBox('Error creating phishing campaign. Please try again.')
+    updateMessageBox('Error creating phishing template. Please try again.')
   }
 }
 
@@ -147,12 +147,12 @@ const onHtmlFileChange = (event) => {
 
         <!-- Create New Campaign Section -->
         <div v-if="canEdit()" class="bg-gray-800 shadow rounded-lg mb-8 p-6">
-          <h2 class="text-xl font-semibold text-white mb-4">Create New Phishing Campaign</h2>
+          <h2 class="text-xl font-semibold text-white mb-4">Create New Phishing Campaign Template</h2>
           
           <div class="space-y-4">
             <!-- Campaign Name -->
             <div>
-              <label for="campaignName" class="block text-sm font-medium text-white">Phishing Campaign Name</label>
+              <label for="campaignName" class="block text-sm font-medium text-white">Phishing Campaign Template Name</label>
               <input
                 type="text"
                 id="campaignName"
@@ -253,14 +253,14 @@ const onHtmlFileChange = (event) => {
 
         <!-- Phishing Campaigns Section -->
         <div class="mb-8">
-          <h2 class="text-xl font-semibold text-white mb-4">Phishing Campaigns</h2>
+          <h2 class="text-xl font-semibold text-white mb-4">Phishing Templates</h2>
           
           <div class="bg-gray-800 shadow overflow-hidden rounded-lg">
             <table class="min-w-full divide-y divide-gray-700">
               <thead class="bg-gray-700">
                 <tr>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4 cursor-pointer" @click="sortBy('Name')">
-                    Campaign Name
+                    Campaign Template Name
                     <span v-if="sortColumn === 'Name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/4 cursor-pointer" @click="sortBy('Target_Group')">

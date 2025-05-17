@@ -41,18 +41,18 @@ onMounted(async () => {
     const campaignId = route.params.id;
     
     // Fetch campaign from Pocketbase
-    const record = await pocketbase.collection('Phishing_Campaign').getOne(campaignId, {
+    const record = await pocketbase.collection('Phishing_Templates').getOne(campaignId, {
       fields: 'Name, Notes, Caddy, Example_From, Example_Subject, Target_Group, expand.Phishlet, HTML',
       expand: 'Phishlet'
     });
 
-    const stats = await pocketbase.collection('Phishing_Campaign_View').getOne(campaignId, {
+    const stats = await pocketbase.collection('Phishing_Templates_View').getOne(campaignId, {
         fields: 'id, Name, Target_Group, total_sent, total_clicked, total_submit',
     });
 
     const artifactsList = await pocketbase.collection('Artifacts').getFullList({
       fields: 'id, Name, Description, File',
-      filter: `Phishing_Campaign = "${campaignId}"`
+      filter: `Phishing_Template = "${campaignId}"`
     });
 
     artifacts.value = artifactsList
@@ -97,7 +97,7 @@ onMounted(async () => {
 async function updateCampaignInfo() {
   if (!campaign.value) return
   try {
-    await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
+    await pocketbase.collection('Phishing_Templates').update(campaign.value.id, {
       Name: editedCampaignName.value,
       Target_Group: editedTargetGroup.value,
       Notes: editedCampaignNotes.value,
@@ -135,7 +135,7 @@ function toggleEditCaddyfile() {
 async function updateCaddyfile(newCaddyfile) {
   if (!campaign.value) return
   try {
-    await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
+    await pocketbase.collection('Phishing_Templates').update(campaign.value.id, {
       Caddy: newCaddyfile,
       Updated_By: pocketbase.authStore.model.id,
     });
@@ -180,7 +180,7 @@ const sanitizedHtml = computed(() => {
 async function saveHtmlTemplateToBackend(htmlTemplate) {
   if (!campaign.value) return;
   try {
-    await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
+    await pocketbase.collection('Phishing_Templates').update(campaign.value.id, {
       HTML: htmlTemplate,
       Updated_By: pocketbase.authStore.model.id,
     });
@@ -231,14 +231,19 @@ function toggleEditPhishlet() {
 async function savePhishlet() {
   if (!campaign.value) return;
   try {
-    await pocketbase.collection('Phishing_Campaign').update(campaign.value.id, {
+    await pocketbase.collection('Phishing_Templates').update(campaign.value.id, {
       Phishlet: selectedPhishletId.value,
       Updated_By: pocketbase.authStore.model.id,
     });
+
+    const record = await pocketbase.collection('Phishing_Templates').getOne(campaign.value.id, {
+      fields: 'expand.Phishlet',
+      expand: 'Phishlet'
+    });
     // Update local state
-    const selected = phishlets.value.find(p => p.id === selectedPhishletId.value);
-    campaign.value.yamlConfig = selected ? selected.Phishlet : '';
-    campaign.value.phishletName = selected ? selected.Name : '';
+    campaign.value.yamlConfig = record.expand.Phishlet.Phishlet || '';
+    campaign.value.phishletName = record.expand.Phishlet.Name || '';
+
     phishletMessage.value = 'Successfully updated phishlet';
     setTimeout(() => { phishletMessage.value = '' }, 2000);
   } catch (err) {
@@ -288,13 +293,13 @@ async function uploadArtifact() {
       Name: artifactName.value,
       Description: artifactDescription.value,
       File: artifactFile.value,
-      Phishing_Campaign: campaign.value.id,
+      Phishing_Template: campaign.value.id,
       Uploaded_By: pocketbase.authStore.model.id,
     })
     
     artifacts.value = await pocketbase.collection('Artifacts').getFullList({
       fields: 'id, Name, Description, File',
-      filter: `Phishing_Campaign = "${campaign.value.id}"`
+      filter: `Phishing_Template = "${campaign.value.id}"`
     })
 
     artifactName.value = ''
