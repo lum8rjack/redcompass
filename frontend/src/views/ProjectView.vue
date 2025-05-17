@@ -31,6 +31,22 @@ const searchQuery = ref('')
 const showResults = ref(false)
 const searchContainer = ref(null)
 
+// Add new refs for phishing campaigns
+const templates = ref([]);
+const campaigns = ref([]);
+const selectedTemplate = ref('');
+const campaignDate = ref('');
+const subject = ref('');
+const emailFrom = ref('');
+const emailsSent = ref(0);
+const emailsClicked = ref(0);
+const credsSubmitted = ref(0);
+const campaignFormError = ref('');
+
+// Add state and functions for delete confirmation modal
+const showDeleteCampaignModal = ref(false)
+const campaignToDelete = ref(null)
+
 // Computed property to check if current user is a project member
 const isProjectMember = computed(() => {
   if (!project.value?.expand?.Project_Members) return false
@@ -49,25 +65,41 @@ const filteredUsers = computed(() => {
 onMounted(async () => {
   try {
     const projectId = route.params.id
-    const [projectRecord, domainsRecord] = await Promise.all([
+    const [projectRecord, domainsRecord, templatesRecord, metricsRecord] = await Promise.all([
       pocketbase.collection('Projects').getOne(projectId, {
         expand: 'Project_Members'
       }),
       pocketbase.collection('Domains').getFullList({
         filter: `Assigned_Project = "${projectId}"`,
         sort: 'Name'
-      })
+      }),
+      pocketbase.collection('Phishing_Templates').getFullList({
+        sort: 'Name',
+        fields: 'id,Name'
+      }),
+      getPhishingMetrics()
     ])
     
     project.value = projectRecord
     domains.value = domainsRecord
+    templates.value = templatesRecord
+    campaigns.value = metricsRecord
   } catch (err) {
     error.value = 'Failed to load project details'
-    console.error('Error fetching project:', err)
   } finally {
     loading.value = false
   }
 })
+
+async function getPhishingMetrics() {
+  const metrics = await pocketbase.collection('Phishing_Metrics').getFullList({
+    filter: `Project = "${route.params.id}"`,
+    sort: 'Date_Sent',
+    fields: 'id,expand.Phishing_Template,Subject,From,Emails_Sent,Emails_Clicked,Creds_Submit,Date_Sent',
+    expand: 'Phishing_Template'
+  })
+  return metrics
+}
 
 const toggleStatus = async () => {
   if (!project.value.Completed) {
@@ -193,6 +225,98 @@ const getUserById = (id) => availableUsers.value.find(user => user.id === id)
 onClickOutside(searchContainer, () => {
   showResults.value = false
 })
+
+async function addCampaign() {
+  if (!selectedTemplate.value || !campaignDate.value || !subject.value || !emailFrom.value || !emailsSent.value) {
+    campaignFormError.value = 'Error: All fields are required.';
+    console.log(emailsClicked.value)
+    console.log(credsSubmitted.value)
+    console.log(emailsSent.value)
+    console.log(selectedTemplate.value)
+    console.log(campaignDate.value)
+    console.log(subject.value)
+    console.log(emailFrom.value)
+    setTimeout(() => {
+      campaignFormError.value = '';
+    }, 2000);
+    return;
+  }
+
+  if (emailsSent.value < 0 || emailsClicked.value < 0 || credsSubmitted.value < 0) {
+    campaignFormError.value = 'Error: All fields must be positive numbers.';
+    setTimeout(() => {
+      campaignFormError.value = '';
+    }, 2000);
+    return;
+  }
+
+  if (emailsSent.value == 0){
+    campaignFormError.value = 'Error: Emails Sent must be greater than 0.';
+    setTimeout(() => {
+      campaignFormError.value = '';
+    }, 2000);
+    return;
+  }
+  
+  
+
+  try {
+    await pocketbase.collection('Phishing_Metrics').create({
+      Project: project.value.id,
+      Phishing_Template: selectedTemplate.value,
+      Date_Sent: campaignDate.value,
+      Subject: subject.value,
+      From: emailFrom.value,
+      Emails_Sent: emailsSent.value,
+      Emails_Clicked: emailsClicked.value,
+      Creds_Submit: credsSubmitted.value,
+      Created_By: currentUser.id
+    });
+    campaigns.value = await getPhishingMetrics()
+
+    selectedTemplate.value = '';
+    campaignDate.value = '';
+    subject.value = '';
+    emailFrom.value = '';
+    emailsSent.value = '';
+    emailsClicked.value = '';
+    credsSubmitted.value = '';
+  } catch (error) {
+    campaignFormError.value = 'Error adding campaign. Please try again.';
+    setTimeout(() => {
+      campaignFormError.value = '';
+    }, 2000);
+  }
+}
+
+const deleteCampaign = async (id) => {
+  campaigns.value = campaigns.value.filter(c => c.id !== id);
+  try {
+    await pocketbase.collection('Phishing_Metrics').delete(id);
+    campaigns.value = await getPhishingMetrics()
+  } catch (error) {
+    campaignFormError.value = 'Error deleting campaign. Please try again.';
+    setTimeout(() => {
+      campaignFormError.value = '';
+    }, 2000);
+  }
+}
+
+function openDeleteCampaignModal(campaign) {
+  campaignToDelete.value = campaign
+  showDeleteCampaignModal.value = true
+}
+
+function closeDeleteCampaignModal() {
+  showDeleteCampaignModal.value = false
+  campaignToDelete.value = null
+}
+
+async function confirmDeleteCampaign() {
+  if (!campaignToDelete.value) return
+  await deleteCampaign(campaignToDelete.value.id)
+  closeDeleteCampaignModal()
+}
 </script>
 
 <template>
@@ -288,6 +412,92 @@ onClickOutside(searchContainer, () => {
                 {{ calculateProgress(project.Start_Date, project.End_Date) }}% Complete
               </span>
             </div>
+          </div>
+        </div>
+
+        <!-- Phishing Campaigns Section -->
+        <div class="bg-gray-800 shadow rounded-lg px-4 py-5 sm:p-6 mb-8 mt-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium text-white">Phishing Campaigns</h2>
+          </div>
+          <div class="space-y-4 mb-6">
+            <p v-if="campaignFormError" class="text-sm text-center" :class="{
+              'text-red-400': campaignFormError.includes('Error'),
+              'text-green-400': campaignFormError.includes('Success')
+            }">{{ campaignFormError }}</p>
+            <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-2 md:space-y-0">
+              <div class="flex-1">
+                <label for="template" class="block text-sm font-medium text-white">Phishing Template</label>
+                <select id="template" v-model="selectedTemplate" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2">
+                  <option value="" disabled>Select a template</option>
+                  <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.Name }}</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <label for="emailsSent" class="block text-sm font-medium text-white">Emails Sent</label>
+                <input type="number" id="emailsSent" v-model="emailsSent" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+              <div class="flex-1">
+                <label for="emailsClicked" class="block text-sm font-medium text-white">Clicks</label>
+                <input type="number" id="emailsClicked" v-model="emailsClicked" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+              <div class="flex-1">
+                <label for="credsSubmitted" class="block text-sm font-medium text-white">Creds</label>
+                <input type="number" id="credsSubmitted" v-model="credsSubmitted" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-2 md:space-y-0 mt-2">
+              <div class="flex-1">
+                <label for="campaignDate" class="block text-sm font-medium text-white">Date Sent</label>
+                <input type="date" id="campaignDate" v-model="campaignDate" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+              <div class="flex-1">
+                <label for="subject" class="block text-sm font-medium text-white">Subject</label>
+                <input type="text" id="subject" v-model="subject" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+              <div class="flex-1">
+                <label for="emailFrom" class="block text-sm font-medium text-white">Email From</label>
+                <input type="text" id="emailFrom" v-model="emailFrom" required class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white py-1.5 pl-2" />
+              </div>
+            </div>
+            <div class="flex justify-center mt-4">
+              <button @click="addCampaign" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Add</button>
+            </div>
+          </div>
+          <div class="mt-4 w-full overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+              <thead class="bg-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Template</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Subject</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email From</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Emails Sent</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Clicks</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Creds</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-gray-800 divide-y divide-gray-700">
+                <tr v-for="c in campaigns" :key="c.id">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ c.expand?.Phishing_Template?.Name || c.template }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ formatDate(c.Date_Sent) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Subject }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.From }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Emails_Sent }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Emails_Clicked ? c.Emails_Clicked : 0 }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Creds_Submit ? c.Creds_Submit : 0 }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <button @click="openDeleteCampaignModal(c)" class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-1 px-3 rounded-md">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="campaigns.length === 0">
+                  <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-400">No phishing campaigns</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -467,6 +677,30 @@ onClickOutside(searchContainer, () => {
           </button>
           <button
             @click="confirmComplete"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Delete Campaign Confirmation Modal -->
+    <div v-if="showDeleteCampaignModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-medium text-white">Confirm Delete</h3>
+        <p class="text-sm text-gray-300 mb-4">
+          Are you sure you want to delete the campaign '{{ campaignToDelete?.expand?.Phishing_Template?.Name || campaignToDelete?.Subject }}'? This action cannot be undone.
+        </p>
+        <div class="flex justify-end space-x-4">
+          <button
+            @click="closeDeleteCampaignModal"
+            class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmDeleteCampaign"
             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             Confirm
