@@ -1977,7 +1977,7 @@ func init() {
 					{
 						"autogeneratePattern": "",
 						"hidden": false,
-						"id": "_clone_w9v3",
+						"id": "_clone_pJiN",
 						"max": 0,
 						"min": 0,
 						"name": "Name",
@@ -1991,7 +1991,7 @@ func init() {
 					{
 						"autogeneratePattern": "",
 						"hidden": false,
-						"id": "_clone_GsrG",
+						"id": "_clone_StVK",
 						"max": 0,
 						"min": 0,
 						"name": "Target_Group",
@@ -2040,7 +2040,7 @@ func init() {
 				"system": false,
 				"type": "view",
 				"updateRule": null,
-				"viewQuery": "SELECT \n  a.id,\n  a.` + "`" + `Name` + "`" + `,\n  a.` + "`" + `Target_Group` + "`" + `,\n  COALESCE(SUM(b.` + "`" + `Emails_Sent` + "`" + `), 0) AS total_sent,\n  COALESCE(SUM(b.` + "`" + `Emails_Clicked` + "`" + `), 0) AS total_clicked,\n  COALESCE(SUM(b.` + "`" + `Creds_Submit` + "`" + `), 0) AS total_submit\nFROM \n  ` + "`" + `Phishing_Templates` + "`" + ` a\nLEFT JOIN \n  ` + "`" + `Phishing_Metrics` + "`" + ` b ON a.id = b.` + "`" + `Phishing_Campaign` + "`" + `\nGROUP BY \n  a.` + "`" + `Name` + "`" + `",
+				"viewQuery": "SELECT \n  a.id,\n  a.` + "`" + `Name` + "`" + `,\n  a.` + "`" + `Target_Group` + "`" + `,\n  COALESCE(SUM(b.` + "`" + `Emails_Sent` + "`" + `), 0) AS total_sent,\n  COALESCE(SUM(b.` + "`" + `Emails_Clicked` + "`" + `), 0) AS total_clicked,\n  COALESCE(SUM(b.` + "`" + `Creds_Submit` + "`" + `), 0) AS total_submit\nFROM \n  ` + "`" + `Phishing_Templates` + "`" + ` a\nLEFT JOIN \n  ` + "`" + `Phishing_Metrics` + "`" + ` b ON a.id = b.` + "`" + `Phishing_Template` + "`" + `\nGROUP BY \n  a.` + "`" + `Name` + "`" + `",
 				"viewRule": "@request.auth.id != \"\""
 			}
 		]`

@@ -221,7 +221,7 @@ onClickOutside(searchContainer, () => {
                 </p>
               </div>
               <button
-                v-if="isProjectMember"
+                v-if="isProjectMember && !project.Completed"
                 @click="openEditModal"
                 class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
@@ -350,7 +350,7 @@ onClickOutside(searchContainer, () => {
     <Footer />
 
     <!-- Edit Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+    <div v-if="showEditModal && !project.Completed" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
       <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
         <h3 class="text-lg font-medium text-white mb-4">Edit Project</h3>
         <form @submit.prevent="handleEdit" class="space-y-4">
