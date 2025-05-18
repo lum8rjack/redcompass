@@ -11,7 +11,7 @@
         <a href="/domains" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Domains</a>
         <a href="/projects" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Projects</a>
         <a href="/categorizations" class="text-md font-semibold leading-6 text-white hover:text-gray-200">Categorizations</a>
-        <div class="relative">
+        <div class="relative phishing-dropdown">
           <button 
             @click.stop="togglePhishingDropdown"
             class="text-md font-semibold leading-6 text-white hover:text-gray-200 flex items-center"
@@ -139,6 +139,9 @@ const handleLogout = async () => {
 const closeDropdown = (e) => {
   if (!e.target.closest('.avatar-dropdown')) {
     isDropdownOpen.value = false
+  }
+  if (!e.target.closest('.phishing-dropdown')) {
+    isPhishingDropdownOpen.value = false
   }
 }
 
