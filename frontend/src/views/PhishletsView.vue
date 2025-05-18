@@ -277,10 +277,10 @@ function cancelDeletePhishlet() {
     <Footer />
 
     <!-- Phishlet Details Modal -->
-    <div v-if="showPhishletDetailModal" class="fixed inset-0 z-50 overflow-y-auto">
-      <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity" @click="closePhishletDetailModal"></div>
+    <div v-if="showPhishletDetailModal" class="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75">
+      <div class="fixed inset-0 backdrop-blur-sm transition-opacity" @click="closePhishletDetailModal"></div>
       <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-3xl w-full relative mx-auto my-8">
+        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-5xl w-full relative mx-auto my-8">
           <div class="bg-gray-700 px-6 py-4 flex items-center justify-between">
             <h3 class="text-lg font-medium text-white">
               Phishlet Details: {{ selectedPhishlet?.Name }}
