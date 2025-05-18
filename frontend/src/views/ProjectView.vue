@@ -43,28 +43,11 @@ const emailsClicked = ref(0);
 const credsSubmitted = ref(0);
 const campaignFormError = ref('');
 
-// Add state and functions for delete confirmation modal
-const showDeleteCampaignModal = ref(false)
-const campaignToDelete = ref(null)
-
-// Computed property to check if current user is a project member
-const isProjectMember = computed(() => {
-  if (!project.value?.expand?.Project_Members) return false
-  return project.value.expand.Project_Members.some(member => member.id === currentUser.id)
-})
-
-// Add new computed property for filtered users
-const filteredUsers = computed(() => {
-  if (searchQuery.value.length < 3) return []
-  return availableUsers.value.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
-    !editForm.value.selectedUsers.includes(user.id)
-  )
-})
 
 onMounted(async () => {
   try {
     const projectId = route.params.id
+    
     const [projectRecord, domainsRecord, templatesRecord, metricsRecord] = await Promise.all([
       pocketbase.collection('Projects').getOne(projectId, {
         expand: 'Project_Members'
@@ -90,6 +73,32 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Add state and functions for delete confirmation modal
+const showDeleteCampaignModal = ref(false)
+const campaignToDelete = ref(null)
+
+// Computed property to check if current user is a project member
+const isProjectMember = computed(() => {
+  if (!project.value?.expand?.Project_Members) return false
+  return project.value.expand.Project_Members.some(member => member.id === currentUser.id)
+})
+
+// Add new computed property for filtered users
+const filteredUsers = computed(() => {
+  if (searchQuery.value.length < 3) return []
+  return availableUsers.value.filter(user => 
+    user.name.toLowerCase().includes(searchQuery.value.toLowerCase()) &&
+    !editForm.value.selectedUsers.includes(user.id)
+  )
+})
+
+async function getProjectDetails() {
+  const project = await pocketbase.collection('Projects').getOne(route.params.id, {
+    expand: 'Project_Members'
+  })
+  return project
+}
 
 async function getPhishingMetrics() {
   const metrics = await pocketbase.collection('Phishing_Metrics').getFullList({
@@ -202,7 +211,6 @@ const handleEdit = async () => {
     closeEditModal()
   } catch (error) {
     updateMessage.value = 'Failed to update project'
-    console.error('Error updating project:', error)
   }
 }
 
@@ -229,13 +237,6 @@ onClickOutside(searchContainer, () => {
 async function addCampaign() {
   if (!selectedTemplate.value || !campaignDate.value || !subject.value || !emailFrom.value || !emailsSent.value) {
     campaignFormError.value = 'Error: All fields are required.';
-    console.log(emailsClicked.value)
-    console.log(credsSubmitted.value)
-    console.log(emailsSent.value)
-    console.log(selectedTemplate.value)
-    console.log(campaignDate.value)
-    console.log(subject.value)
-    console.log(emailFrom.value)
     setTimeout(() => {
       campaignFormError.value = '';
     }, 2000);
@@ -416,11 +417,11 @@ async function confirmDeleteCampaign() {
         </div>
 
         <!-- Phishing Campaigns Section -->
-        <div class="bg-gray-800 shadow rounded-lg px-4 py-5 sm:p-6 mb-8 mt-6">
+        <div v-if="project" class="bg-gray-800 shadow rounded-lg px-4 py-5 sm:p-6 mb-8 mt-6">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-medium text-white">Phishing Campaigns</h2>
           </div>
-          <div class="space-y-4 mb-6">
+          <div class="space-y-4 mb-6" v-if="!project.Completed && isProjectMember">
             <p v-if="campaignFormError" class="text-sm text-center" :class="{
               'text-red-400': campaignFormError.includes('Error'),
               'text-green-400': campaignFormError.includes('Success')
@@ -475,7 +476,7 @@ async function confirmDeleteCampaign() {
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Emails Sent</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Clicks</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Creds</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                  <th v-if="!project.Completed && isProjectMember" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody class="bg-gray-800 divide-y divide-gray-700">
@@ -487,7 +488,7 @@ async function confirmDeleteCampaign() {
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Emails_Sent }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Emails_Clicked ? c.Emails_Clicked : 0 }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Creds_Submit ? c.Creds_Submit : 0 }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td v-if="!project.Completed && isProjectMember" class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                     <button @click="openDeleteCampaignModal(c)" class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-1 px-3 rounded-md">
                       Delete
                     </button>
