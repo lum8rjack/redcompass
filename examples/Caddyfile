@@ -16,6 +16,7 @@ yourdomain.com {
         path /domains
         path /login
         path /phishing
+	path /phishing-metrics
         path /phishlets
         path /profile
         path /projects
