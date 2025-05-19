@@ -11,6 +11,7 @@ import DomainIdeasView from '../views/DomainIdeasView.vue'
 import PhishingCampaignView from '@/views/PhishingCampaignView.vue'
 import PhishingManagementView from '../views/PhishingManagementView.vue'
 import PhishletsView from '../views/PhishletsView.vue'
+import PhishingMetricsView from '../views/PhishingMetricsView.vue'
 import { isAuthenticated } from '@/utils/auth'
 
 const router = createRouter({
@@ -74,6 +75,12 @@ const router = createRouter({
       name: 'phishing-campaign',
       component: PhishingCampaignView,
       meta: { requiresAuth: true, description: 'Phishing Campaign Details' }
+    },
+    {
+      path: '/phishing-metrics',
+      name: 'phishing-metrics',
+      component: PhishingMetricsView,
+      meta: { requiresAuth: true, description: 'Phishing Metrics' }
     },
     {
       path: '/phishlets',

@@ -34,6 +34,12 @@
                 Campaigns
               </a>
               <a
+                href="/phishing-metrics"
+                class="block px-4 py-2 text-sm text-white hover:bg-gray-600"
+              >
+                Metrics
+              </a>
+              <a
                 href="/phishlets"
                 class="block px-4 py-2 text-sm text-white hover:bg-gray-600"
               >
