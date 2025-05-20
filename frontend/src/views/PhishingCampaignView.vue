@@ -580,7 +580,7 @@ async function downloadArtifact(id) {
                   <tbody class="bg-gray-800 divide-y divide-gray-700">
                     <tr v-for="artifact in artifacts" :key="artifact.id">
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ artifact.Name }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ artifact.Description }}</td>
+                      <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-300">{{ artifact.Description }}</td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ artifact.File }}</td>
                       <td v-if="canEdit()" class="px-6 py-4 whitespace-nowrap text-sm">
                         <button @click="downloadArtifact(artifact.id)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded mr-2">Download</button>

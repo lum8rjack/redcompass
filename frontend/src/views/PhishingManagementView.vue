@@ -8,7 +8,6 @@ import { calculatePercentage } from '@/utils/calculateStats'
 const pocketbase = inject('$pocketbase')
 
 // For file uploads
-const htmlTemplateFile = ref(null)
 const htmlTemplateText = ref('')
 const campaignName = ref('')
 const targetGroup = ref('')
