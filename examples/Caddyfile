@@ -14,6 +14,7 @@ yourdomain.com {
         path /favicon.ico
         path /categorizations
         path /domains
+        path /domain-ideas
         path /login
         path /phishing
 	path /phishing-metrics
