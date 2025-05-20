@@ -11,8 +11,8 @@ const error = ref(null)
 const templates = ref([])
 const campaigns = ref([])
 const selectedTemplate = ref('all')
-const sortColumn = ref('Date_Sent')
-const sortDirection = ref('desc')
+const sortColumn = ref('Project')
+const sortDirection = ref('asc')
 
 // Fetch all phishing templates for dropdown
 async function getTemplates() {
@@ -32,8 +32,8 @@ async function getCampaigns() {
   try {
     const response = await pocketbase.collection('Phishing_Metrics').getFullList({
       expand: 'Phishing_Template,Project',
-      sort: '-Date_Sent',
-      fields: 'id,Phishing_Template,expand.Phishing_Template.Name,expand.Project.Name,Date_Sent,Subject,From,Emails_Sent,Emails_Clicked,Creds_Submit',
+      sort: 'Project.Name',
+      fields: 'id,Phishing_Template,expand.Phishing_Template.Name,expand.Project.Name,Subject,From,Emails_Sent,Emails_Clicked,Creds_Submit',
     })
     campaigns.value = response
   } catch (err) {
@@ -60,10 +60,6 @@ const filteredCampaigns = computed(() => {
       case 'Project':
         aVal = a.expand?.Project?.Name || ''
         bVal = b.expand?.Project?.Name || ''
-        break
-      case 'Date_Sent':
-        aVal = a.Date_Sent || ''
-        bVal = b.Date_Sent || ''
         break
       case 'Subject':
         aVal = a.Subject || ''
@@ -99,11 +95,6 @@ const totalEmailsSent = computed(() => filteredCampaigns.value.reduce((sum, c) =
 const totalEmailsClicked = computed(() => filteredCampaigns.value.reduce((sum, c) => sum + (c.Emails_Clicked || 0), 0))
 const totalCredsSubmit = computed(() => filteredCampaigns.value.reduce((sum, c) => sum + (c.Creds_Submit || 0), 0))
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString()
-}
 
 function handleSort(col) {
   if (sortColumn.value === col) {
@@ -143,10 +134,6 @@ function handleSort(col) {
                     Project
                     <span v-if="sortColumn === 'Project'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                   </th>
-                  <th @click="handleSort('Date_Sent')" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                    Date Sent
-                    <span v-if="sortColumn === 'Date_Sent'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                  </th>
                   <th @click="handleSort('Subject')" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer select-none">
                     Subject
                     <span v-if="sortColumn === 'Subject'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
@@ -173,7 +160,6 @@ function handleSort(col) {
                 <tr v-for="c in filteredCampaigns" :key="c.id">
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ c.expand?.Phishing_Template?.Name || 'Unknown' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ c.expand?.Project?.Name || 'Unknown' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ formatDate(c.Date_Sent) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Subject }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.From }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Emails_Sent }}</td>
@@ -181,10 +167,10 @@ function handleSort(col) {
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ c.Creds_Submit || 0 }} ({{ calculatePercentage(c.Emails_Sent, c.Creds_Submit) }}%)</td>
                 </tr>
                 <tr v-if="filteredCampaigns.length === 0">
-                  <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-400">No phishing campaigns found</td>
+                  <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-400">No phishing campaigns found</td>
                 </tr>
                 <tr v-else class="bg-gray-700 font-bold">
-                  <td class="px-6 py-4 text-sm text-white" colspan="5">Totals</td>
+                  <td class="px-6 py-4 text-sm text-white" colspan="4">Totals</td>
                   <td class="px-6 py-4 text-sm text-white">{{ totalEmailsSent }}</td>
                   <td class="px-6 py-4 text-sm text-white">{{ totalEmailsClicked }} ({{ calculatePercentage(totalEmailsSent, totalEmailsClicked) }}%)</td>
                   <td class="px-6 py-4 text-sm text-white">{{ totalCredsSubmit }} ({{ calculatePercentage(totalEmailsSent, totalCredsSubmit) }}%)</td>
