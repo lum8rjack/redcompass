@@ -27,6 +27,7 @@ onMounted(async () => {
       const response2 = await pocketbase.collection('users').getFullList({
         sort: 'name',
         fields: 'id,name,role',
+        filter: 'role != "viewer"',
       });
       availableUsers.value = response2;
     } catch (error) {

@@ -158,6 +158,7 @@ const openEditModal = async () => {
     const response = await pocketbase.collection('users').getFullList({
       sort: 'name',
       fields: 'id,name,role',
+      filter: 'role != "viewer"',
     });
     availableUsers.value = response;
 
