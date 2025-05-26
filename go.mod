@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/lum8rjack/go-namecheap-sdk/v2 v2.0.0-20250414024852-aa24fc3d3646
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/pocketbase v0.28.1
+	github.com/pocketbase/pocketbase v0.28.2
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/time v0.11.0
 )
@@ -46,8 +46,8 @@ require (
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
-	modernc.org/libc v1.62.1 // indirect
+	modernc.org/libc v1.65.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.37.0 // indirect
+	modernc.org/sqlite v1.37.1 // indirect
 )
