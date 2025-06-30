@@ -142,7 +142,7 @@ const onHtmlFileChange = (event) => {
     <Header />
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <PageDescription title="Phishing Campaign Management" description="Manage phishing campaigns for security awareness training. Plan, execute, and track phishing simulations to test and improve your organization's security awareness." />
+        <PageDescription title="Phishing Campaign Templates" description="Create and manage phishing campaign templates for security awareness training. Plan, execute, and track phishing simulations to test and improve your organization's security awareness." />
 
         <!-- Create New Campaign Section -->
         <div v-if="canEdit()" class="bg-gray-800 shadow rounded-lg mb-8 p-6">
