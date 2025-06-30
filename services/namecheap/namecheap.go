@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	nc "github.com/lum8rjack/go-namecheap-sdk/v2/namecheap"
+	nc "github.com/namecheap/go-namecheap-sdk/v2/namecheap"
 	"golang.org/x/time/rate"
 )
 

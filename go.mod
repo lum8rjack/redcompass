@@ -3,7 +3,7 @@ module github.com/lum8rjack/redcompass
 go 1.24.1
 
 require (
-	github.com/lum8rjack/go-namecheap-sdk/v2 v2.0.0-20250414024852-aa24fc3d3646
+	github.com/namecheap/go-namecheap-sdk/v2 v2.4.1
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.28.3
 	github.com/spf13/cobra v1.9.1
