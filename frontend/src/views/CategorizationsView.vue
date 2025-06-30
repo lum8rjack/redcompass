@@ -4,82 +4,88 @@ import Footer from '@/components/Footer.vue'
 import PageDescription from '@/components/PageDescription.vue'
 const categorizationServices = [
     {
-        name: 'Barracuda',
-        url: 'https://www.barracudacentral.org/report',
-        actions: 'Submit',
-        icon: 'Barracuda'
+      name: 'Barracuda',
+      url: 'https://www.barracudacentral.org/report',
+      actions: 'Submit',
+      icon: 'Barracuda'
     },
     {
-        name: 'Check Point (requires login)',
-        url: 'https://urlcat.checkpoint.com/urlcat/',
-        actions: 'Submit',
-        icon: 'Check Point'
+      name: 'Check Point (requires login)',
+      url: 'https://urlcat.checkpoint.com/urlcat/',
+      actions: 'Submit',
+      icon: 'Check Point'
     },
     {
-        name: 'Cisco Talos',
-        url: 'https://talosintelligence.com/',
-        actions: 'Review',
-        icon: 'Cisco Talos'
+      name: 'Cisco Talos',
+      url: 'https://talosintelligence.com/',
+      actions: 'Review',
+      icon: 'Cisco Talos'
     },
     {
-        name: 'Cloudflare',
-        url: 'https://radar.cloudflare.com/domains/feedback',
-        actions: 'Review and Submit',
-        icon: 'Cloudflare'
+      name: 'Cloudflare',
+      url: 'https://radar.cloudflare.com/domains/feedback',
+      actions: 'Review and Submit',
+      icon: 'Cloudflare'
     },
     {
-        name: 'Google Transparency Report',
-        url: 'https://transparencyreport.google.com/safe-browsing/search',
-        actions: 'Review',
-        icon: 'Google'
+      name: 'Google Transparency Report',
+      url: 'https://transparencyreport.google.com/safe-browsing/search',
+      actions: 'Review',
+      icon: 'Google'
     },
     {
-        name: 'McAfee',
-        url: 'https://sitelookup.mcafee.com/',
-        actions: 'Review and Submit',
-        icon: 'McAfee'
+      name: 'McAfee',
+      url: 'https://sitelookup.mcafee.com/',
+      actions: 'Review and Submit',
+      icon: 'McAfee'
     },
     {
-        name: 'Norton',
-        url: 'https://safeweb.norton.com/',
-        actions: 'Review and Submit',
-        icon: 'Norton'
+      name: 'Norton',
+      url: 'https://safeweb.norton.com/',
+      actions: 'Review and Submit',
+      icon: 'Norton'
     },
     {
-        name: 'Palo Alto',
-        url: 'https://urlfiltering.paloaltonetworks.com/',
-        actions: 'Review and Submit',
-        icon: 'Palo Alto'
+      name: 'Palo Alto',
+      url: 'https://urlfiltering.paloaltonetworks.com/',
+      actions: 'Review and Submit',
+      icon: 'Palo Alto'
     },
     {
-        name: 'SonicWall',
-        url: 'https://cfssupport.sonicwall.com/Support/web/eng/newui/viewRating.jsp',
-        actions: 'Review and Submit',
-        icon: 'SonicWall'
+      name: 'SonicWall',
+      url: 'https://cfssupport.sonicwall.com/Support/web/eng/newui/viewRating.jsp',
+      actions: 'Review and Submit',
+      icon: 'SonicWall'
     },
     {
-        name: 'Symantec',
-        url: 'https://sitereview.bluecoat.com/#/',
-        actions: 'Review and Submit',
-        icon: 'Symantex'
+      name: 'Symantec',
+      url: 'https://sitereview.bluecoat.com/#/',
+      actions: 'Review and Submit',
+      icon: 'Symantex'
     },
     {
-        name: 'Trellix',
-        url: 'https://trustedsource.org/',
-        actions: 'Review and Submit',
-        icon: 'Trellix'
+      name: 'Trellix',
+      url: 'https://trustedsource.org/',
+      actions: 'Review and Submit',
+      icon: 'Trellix'
     },
     {
-        name: 'Trend Micro',
-        url: 'https://global.sitesafety.trendmicro.com/',
-        actions: 'Review and Submit',
-        icon: 'Trend Micro'
+      name: 'Trend Micro',
+      url: 'https://global.sitesafety.trendmicro.com/',
+      actions: 'Review and Submit',
+      icon: 'Trend Micro'
     },
     {
-        name: 'VirusTotal',
-        url: 'https://www.virustotal.com/gui/home/url',
-        actions: 'Review',
-        icon: 'VirusTotal'
+      name: 'VirusTotal',
+      url: 'https://www.virustotal.com/gui/home/url',
+      actions: 'Review',
+      icon: 'VirusTotal'
+    },
+    {
+      name: 'Zscaler',
+      url: 'https://zulu.zscaler.com/',
+      actions: 'Review',
+      icon: 'Zscaler'
     }
 ]
 </script>
