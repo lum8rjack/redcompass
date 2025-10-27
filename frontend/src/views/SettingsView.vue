@@ -11,21 +11,48 @@
   const namecheapErrorMessage = ref('')
   const namecheapID = ref('')
   const namecheapCronJob = ref('')
+  
+  const porkbunApiKey = ref('')
+  const porkbunSecretKey = ref('')
+  const porkbunErrorMessage = ref('')
+  const porkbunID = ref('')
+  const porkbunCronJob = ref('')
 
   onMounted(async () => {
     try {
       if(pocketbase.authStore.model.role === 'admin') {
         isAdmin.value = true;
       }
-      const record = await pocketbase.collection('Services').getFirstListItem('Provider="Namecheap"', {
-        fields: 'id,Provider,Settings,Cron',
-      });
-      if (record) {
-        namecheapApiKey.value = record.Settings.apiKey
-        namecheapUsername.value = record.Settings.username
-        namecheapIpAddress.value = record.Settings.ipAddress
-        namecheapCronJob.value = record.Cron || ''
-        namecheapID.value = record.id
+      
+      // Fetch Namecheap settings
+      try {
+        const namecheapRecord = await pocketbase.collection('Services').getFirstListItem('Provider="Namecheap"', {
+          fields: 'id,Provider,Settings,Cron',
+        });
+        if (namecheapRecord) {
+          namecheapApiKey.value = namecheapRecord.Settings.apiKey
+          namecheapUsername.value = namecheapRecord.Settings.username
+          namecheapIpAddress.value = namecheapRecord.Settings.ipAddress
+          namecheapCronJob.value = namecheapRecord.Cron || ''
+          namecheapID.value = namecheapRecord.id
+        }
+      } catch (error) {
+        console.error('Error fetching Namecheap data:', error);
+      }
+      
+      // Fetch Porkbun settings
+      try {
+        const porkbunRecord = await pocketbase.collection('Services').getFirstListItem('Provider="Porkbun"', {
+          fields: 'id,Provider,Settings,Cron',
+        });
+        if (porkbunRecord) {
+          porkbunApiKey.value = porkbunRecord.Settings.apiKey
+          porkbunSecretKey.value = porkbunRecord.Settings.secretKey
+          porkbunCronJob.value = porkbunRecord.Cron || ''
+          porkbunID.value = porkbunRecord.id
+        }
+      } catch (error) {
+        console.error('Error fetching Porkbun data:', error);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -87,6 +114,67 @@
       namecheapErrorMessage.value = 'Settings deleted successfully'
     } catch (error) {
       namecheapErrorMessage.value = 'An error occurred while deleting settings'
+    }
+  }
+
+  const savePorkbunSettings = async () => {
+    try {
+      porkbunErrorMessage.value = '' // Clear any previous error
+      if (porkbunApiKey.value.length < 8) {
+        porkbunErrorMessage.value = 'API Key must be at least 8 characters'
+        return
+      }
+      if (porkbunSecretKey.value.length < 8) {
+        porkbunErrorMessage.value = 'Secret Key must be at least 8 characters'
+        return
+      }
+
+      if (!porkbunApiKey.value.startsWith('pk')) {
+        porkbunErrorMessage.value = 'Invalid API Key. API Key must start with "pk"'
+        return
+      }
+      if (!porkbunSecretKey.value.startsWith('sk')) {
+        porkbunErrorMessage.value = 'Invalid Secret Key. Secret Key must start with "sk"'
+        return
+      }
+
+      const data = {
+        "Provider": "Porkbun",
+        "Settings": {
+          "apiKey": porkbunApiKey.value,
+          "secretKey": porkbunSecretKey.value,
+        },
+        "Cron": porkbunCronJob.value
+      };
+
+      if (porkbunID.value) {
+        await pocketbase.collection('Services').update(porkbunID.value, data);
+        porkbunErrorMessage.value = 'Settings updated'
+      } else {
+        const record =  await pocketbase.collection('Services').create(data);
+        porkbunID.value = record.id
+        porkbunErrorMessage.value = 'Settings saved'
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      porkbunErrorMessage.value = 'An error occurred while saving settings'
+    }
+  }
+
+  const deletePorkbunSettings = async () => {
+    try {
+      porkbunErrorMessage.value = '' // Clear any previous error
+      await pocketbase.collection('Services').delete(porkbunID.value)
+      
+      // Reset all form values after successful deletion
+      porkbunApiKey.value = ''
+      porkbunSecretKey.value = ''
+      porkbunCronJob.value = ''
+      porkbunID.value = ''
+      
+      porkbunErrorMessage.value = 'Settings deleted successfully'
+    } catch (error) {
+      porkbunErrorMessage.value = 'An error occurred while deleting settings'
     }
   }
 </script>
@@ -161,6 +249,65 @@
 
             <p v-if="namecheapErrorMessage" class="mt-2 text-sm text-white text-center">
               {{ namecheapErrorMessage }}
+            </p>
+          </form>
+        </div>
+        
+        <div class="bg-gray-800 rounded-lg shadow p-6 mt-6">
+          <h2 class="text-white text-2xl font-bold mb-6">Porkbun API Settings</h2>
+          <form @submit.prevent="savePorkbunSettings" class="space-y-4">
+            <div>
+              <label for="porkbunApiKey" class="block text-sm font-medium text-gray-300">API Key</label>
+              <input
+                id="porkbunApiKey"
+                v-model="porkbunApiKey"
+                type="password"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="Enter your Porkbun API key"
+              />
+            </div>
+            <div>
+              <label for="porkbunSecretKey" class="block text-sm font-medium text-gray-300">Secret Key</label>
+              <input
+                id="porkbunSecretKey"
+                v-model="porkbunSecretKey"
+                type="password"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="Enter your Porkbun secret key"
+              />
+            </div>
+            <div>
+              <label for="porkbunCronJob" class="block text-sm font-medium text-gray-300">Cron Job Schedule</label>
+              <input
+                id="porkbunCronJob"
+                v-model="porkbunCronJob"
+                type="text"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="Enter cron job schedule (e.g., */15 * * * *)"
+              />
+              <p class="mt-1 text-sm text-gray-400">
+                Format: minute hour day month weekday (e.g., */15 * * * * runs every 15 minutes)
+              </p>
+            </div>
+            <button
+              type="submit"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              Save Settings
+            </button>
+            
+            <!-- Delete button - only shown when settings exist -->
+            <button
+              v-if="porkbunID"
+              type="button"
+              @click="deletePorkbunSettings"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
+            >
+              Delete Settings
+            </button>
+
+            <p v-if="porkbunErrorMessage" class="mt-2 text-sm text-white text-center">
+              {{ porkbunErrorMessage }}
             </p>
           </form>
         </div>
