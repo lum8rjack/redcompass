@@ -375,7 +375,7 @@ async function confirmDeleteCampaign() {
                     class="px-4 py-2 rounded-md text-sm font-medium"
                     :class="{
                       'bg-green-600 hover:bg-green-700 text-white': project.Completed,
-                      'bg-gray-600 hover:bg-gray-700 text-white': !project.Completed
+                      'bg-blue-600 hover:bg-blue-700 text-white': !project.Completed
                     }"
                   >
                     {{ project.Completed ? 'Reactivate Project' : 'Mark Project Complete' }}

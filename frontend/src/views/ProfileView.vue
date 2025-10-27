@@ -224,7 +224,7 @@
                         class="px-3 py-1 rounded-md text-sm font-medium"
                         :class="{
                           'bg-green-600 hover:bg-green-700 text-white': project.Completed === true,
-                          'bg-gray-600 hover:bg-gray-700 text-white': project.Completed === false
+                          'bg-blue-600 hover:bg-blue-700 text-white': project.Completed === false
                         }"
                       >
                         {{ project.Completed === true ? 'Reactivate' : 'Mark Complete' }}
