@@ -39,7 +39,7 @@ func NewClient(settings string) (*Client, error) {
 	}
 
 	// Check if the IP is a valid IP address
-	if net.ParseIP(namecheapSettings.IP) != nil {
+	if net.ParseIP(namecheapSettings.IP) == nil {
 		return nil, errors.New("invalid IP address")
 	}
 
