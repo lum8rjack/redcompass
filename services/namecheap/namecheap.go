@@ -2,36 +2,20 @@ package namecheap
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net"
 	"strconv"
 	"time"
 
+	"github.com/lum8rjack/redcompass/services/types"
 	nc "github.com/namecheap/go-namecheap-sdk/v2/namecheap"
 	"golang.org/x/time/rate"
 )
 
-type Domain struct {
-	Name       string
-	Created    time.Time
-	Expires    time.Time
-	IsExpired  bool
-	AutoRenew  bool
-	IsLocked   bool
-	WhoIsGuard bool
-	IsOurDNS   bool
-}
-
-type Record struct {
-	Domain  string
-	HostId  string
-	Name    string
-	Type    string
-	Address string
-}
-
 type Settings struct {
-	Username string `json:"username"`
 	ApiKey   string `json:"apiKey"`
+	Username string `json:"username"`
 	IP       string `json:"ipAddress"`
 }
 
@@ -42,30 +26,51 @@ type Client struct {
 	perDayLimiter    *rate.Limiter
 }
 
-func NewClient(username string, apikey string, ip string) Client {
+func NewClient(settings string) (*Client, error) {
+	var namecheapSettings Settings
+	err := json.Unmarshal([]byte(settings), &namecheapSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if the settings are valid
+	if namecheapSettings.ApiKey == "" || namecheapSettings.IP == "" || namecheapSettings.Username == "" {
+		return nil, errors.New("invalid settings")
+	}
+
+	// Check if the IP is a valid IP address
+	if net.ParseIP(namecheapSettings.IP) != nil {
+		return nil, errors.New("invalid IP address")
+	}
+
 	c := nc.NewClient(&nc.ClientOptions{
-		UserName:   username,
-		ApiUser:    username,
-		ApiKey:     apikey,
-		ClientIp:   ip,
+		UserName:   namecheapSettings.Username,
+		ApiUser:    namecheapSettings.Username,
+		ApiKey:     namecheapSettings.ApiKey,
+		ClientIp:   namecheapSettings.IP,
 		UseSandbox: false,
 	})
 
 	// Namecheap limit: 50/min, 700/hour, and 8000/day across the whole key
-	return Client{
+	return &Client{
 		client:           c,
 		perMinuteLimiter: rate.NewLimiter(rate.Every(time.Minute/50), 1),
 		perHourLimiter:   rate.NewLimiter(rate.Every(time.Hour/700), 650),
 		perDayLimiter:    rate.NewLimiter(rate.Every(24*time.Hour/8000), 7900),
-	}
+	}, nil
 }
 
-// NamecheapGetDomains returns a list of all domains for the user
-func (c *Client) NamecheapGetDomains() ([]Domain, error) {
-	var domains []Domain
+// GetName returns the name of the service
+func (c *Client) GetName() string {
+	return "Namecheap"
+}
+
+// GetDomains returns a list of all domains for the user
+func (c *Client) GetDomains() ([]types.Domain, error) {
+	var domains []types.Domain
 
 	// Wait for rate limiter
-	if err := c.WaitForRateLimit(); err != nil {
+	if err := c.waitForRateLimit(); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +88,7 @@ func (c *Client) NamecheapGetDomains() ([]Domain, error) {
 	}
 
 	for _, x := range *ncresp.Domains {
-		newDomain := Domain{}
+		newDomain := types.Domain{}
 
 		// Check the pointers for nil values
 		if x.Name != nil {
@@ -124,12 +129,12 @@ func (c *Client) NamecheapGetDomains() ([]Domain, error) {
 	return domains, nil
 }
 
-// NamecheapGetDomainRecords returns a list of all records for a domain
-func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
-	var records []Record
+// GetDomainRecords returns a list of all records for a domain
+func (c *Client) GetDomainRecords(domain string) ([]types.Record, error) {
+	var records []types.Record
 
 	// Wait for rate limiter
-	if err := c.WaitForRateLimit(); err != nil {
+	if err := c.waitForRateLimit(); err != nil {
 		return nil, err
 	}
 
@@ -144,7 +149,7 @@ func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
 	}
 
 	for _, x := range *ncresp.DomainDNSGetHostsResult.Hosts {
-		r := Record{
+		r := types.Record{
 			Domain: domain,
 		}
 
@@ -172,7 +177,7 @@ func (c *Client) NamecheapGetDomainRecords(domain string) ([]Record, error) {
 }
 
 // Wait for the rate limiters
-func (c *Client) WaitForRateLimit() error {
+func (c *Client) waitForRateLimit() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 

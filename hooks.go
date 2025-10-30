@@ -1,17 +1,14 @@
 package main
 
 import (
-	"encoding/json"
-
-	"github.com/lum8rjack/redcompass/services/namecheap"
 	"github.com/pocketbase/pocketbase/core"
 )
 
 func SetupHooks() {
 	bootstrapHook()
-	namecheapCreateHook()
-	namecheapUpdateHook()
-	namecheapDeleteHook()
+	createHook()
+	updateHook()
+	deleteHook()
 }
 
 func bootstrapHook() {
@@ -20,138 +17,80 @@ func bootstrapHook() {
 			return err
 		}
 
-		namecheapStartupHook()
-
+		checkAllServices()
 		return nil
 	})
 }
 
-func namecheapStartupHook() {
-	msg := "CRON:Namecheap startup hook"
-
-	record, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
+// On startup, loop through all services and add the cron job
+func checkAllServices() {
+	services, err := app.FindAllRecords("Services")
 	if err != nil {
+		app.Logger().Error("Error finding services", "error", err.Error())
 		return
 	}
 
-	recordSettings := record.GetString("Settings")
-	if recordSettings == "" {
-		app.Logger().Error(msg, "function", "record.GetString", "error", "no settings")
-		return
-	}
-
-	var settings namecheap.Settings
-	err = json.Unmarshal([]byte(recordSettings), &settings)
-	if err != nil {
-		app.Logger().Error(msg, "function", "json.Unmarshal", "error", err.Error())
-		return
-	}
-
-	if settings.ApiKey == "" || settings.IP == "" || settings.Username == "" {
-		emtpyKey := settings.ApiKey == ""
-		emtpyIP := settings.IP == ""
-		emtpyUsername := settings.Username == ""
-
-		app.Logger().Error(msg, "error", "invalid settings", "emptyKey", emtpyKey, "emptyIP", emtpyIP, "emptyUsername", emtpyUsername)
-		return
-	}
-
-	recordCron := record.GetString("Cron")
-	if recordCron == "" {
-		app.Logger().Error(msg, "function", "record.GetString", "error", "no cron")
-		return
-	}
-
-	AddNamecheapCron("Namecheap", recordCron)
-	app.Logger().Info(msg, "status", "created", "jobID", "Namecheap", "cron", recordCron)
-}
-
-func namecheapDeleteHook() {
-	app.OnRecordDelete("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "CRON:Namecheap delete hook"
-
-		recordName := e.Record.GetString("Provider")
-		if recordName != "Namecheap" {
-			return e.Next()
+	for _, service := range services {
+		serviceName := service.GetString("Provider")
+		if serviceName == "" {
+			continue
 		}
 
-		RemoveNamecheapCron("Namecheap")
-		app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
-		return e.Next()
-	})
-}
-
-func namecheapCreateHook() {
-	app.OnRecordAfterCreateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "CRON:Namecheap create hook"
-
-		namecheapHelperFunc(e, msg)
-
-		return e.Next()
-	})
-}
-
-func namecheapUpdateHook() {
-	app.OnRecordAfterUpdateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
-		msg := "CRON:Namecheap update hook"
-
-		// Check if the record Provider was changed / no Namecheap providers
-		_, err := app.FindFirstRecordByData("Services", "Provider", "Namecheap")
+		msg := "CRON:" + serviceName + " startup hook"
+		err := AddDomainsCronJob(service)
 		if err != nil {
-			app.Logger().Error(msg, "function", "app.FindFirstRecordByData", "error", err.Error()) // sql: no rows in result set
-			RemoveNamecheapCron("Namecheap")
+			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
+			continue
+		}
+		app.Logger().Info(msg, "status", "created", "jobID", serviceName)
+	}
+
+}
+
+func createHook() {
+	app.OnRecordCreate("Services").BindFunc(func(e *core.RecordEvent) error {
+		msg := "CRON:" + e.Record.GetString("Provider") + " create hook"
+		err := AddDomainsCronJob(e.Record)
+		if err != nil {
+			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
 			return e.Next()
 		}
-
-		namecheapHelperFunc(e, msg)
+		app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
 		return e.Next()
 	})
 }
 
-func namecheapHelperFunc(e *core.RecordEvent, msg string) {
-	// Remove the old cron job
-	RemoveNamecheapCron("Namecheap")
-	app.Logger().Info(msg, "status", "deleted", "jobID", "Namecheap")
+func updateHook() {
+	app.OnRecordAfterUpdateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
+		msg := "CRON:" + e.Record.GetString("Provider") + " update hook"
 
-	// Check if the record Provider was changed / no Namecheap providers
-	recordName := e.Record.GetString("Provider")
-	if recordName != "Namecheap" {
-		return
-	}
+		err := RemoveCronJob(e.Record.GetString("Provider"))
+		if err != nil {
+			app.Logger().Error(msg, "function", "RemoveCronJob", "error", err.Error())
+			return e.Next()
+		}
 
-	// Get the new settings
-	recordSettings := e.Record.GetString("Settings")
-	if recordSettings == "" {
-		app.Logger().Error(msg, "function", "record.GetString", "error", "no settings")
-		return
-	}
+		err = AddDomainsCronJob(e.Record)
+		if err != nil {
+			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
+			return e.Next()
+		}
 
-	// Unmarshal the settings
-	var settings namecheap.Settings
-	err := json.Unmarshal([]byte(recordSettings), &settings)
-	if err != nil {
-		app.Logger().Error(msg, "function", "json.Unmarshal", "error", err.Error())
-		return
-	}
+		app.Logger().Info(msg, "status", "updated", "jobID", e.Record.GetString("Provider"))
+		return e.Next()
+	})
+}
 
-	// Check if the settings are valid
-	if settings.ApiKey == "" || settings.IP == "" || settings.Username == "" {
-		emptyKey := settings.ApiKey == ""
-		emptyIP := settings.IP == ""
-		emptyUsername := settings.Username == ""
+func deleteHook() {
+	app.OnRecordDelete("Services").BindFunc(func(e *core.RecordEvent) error {
+		msg := "CRON:" + e.Record.GetString("Provider") + " delete hook"
+		err := RemoveCronJob(e.Record.GetString("Provider"))
+		if err != nil {
+			app.Logger().Error(msg, "function", "RemoveCronJob", "error", err.Error())
+			return e.Next()
+		}
+		app.Logger().Info(msg, "status", "deleted", "jobID", e.Record.GetString("Provider"))
 
-		app.Logger().Error(msg, "error", "invalid settings", "emptyKey", emptyKey, "emptyIP", emptyIP, "emptyUsername", emptyUsername)
-		return
-	}
-
-	// Get the new cron
-	recordCron := e.Record.GetString("Cron")
-	if recordCron == "" {
-		app.Logger().Error(msg, "function", "record.GetString", "error", "no cron")
-		return
-	}
-
-	// Add the new cron job
-	AddNamecheapCron("Namecheap", recordCron)
-	app.Logger().Info(msg, "status", "created", "jobID", "Namecheap", "cron", recordCron)
+		return e.Next()
+	})
 }
