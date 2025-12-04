@@ -13,7 +13,8 @@
     try {
       const response = await pocketbase.collection('Domains').getFullList({
         sort: '-Name',
-        fields: 'id,Name,Purchased_Date,Expiration_Date,Is_Expired,Auto_Renew,Is_Locked,Assigned_Project,Tags,Healthy,Checked_Out_By,expand.Assigned_Project.Name',
+        filter: 'Is_Expired != true',
+        fields: 'id,Name,Purchased_Date,Expiration_Date,Auto_Renew,Is_Locked,Assigned_Project,Tags,Healthy,Checked_Out_By,expand.Assigned_Project.Name',
         expand: 'Assigned_Project',
       });
       domains.value = response;
