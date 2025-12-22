@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -61,6 +62,7 @@ func createHook() {
 }
 
 func updateHook() {
+	// When a service is updated, remove the cron job and add a new and updated cron job
 	app.OnRecordAfterUpdateSuccess("Services").BindFunc(func(e *core.RecordEvent) error {
 		msg := "CRON:" + e.Record.GetString("Provider") + " update hook"
 
@@ -77,6 +79,33 @@ func updateHook() {
 		}
 
 		app.Logger().Info(msg, "status", "updated", "jobID", e.Record.GetString("Provider"))
+		return e.Next()
+	})
+
+	// When a project is completed, unassign all domains from the project and set the last used project to the project id
+	app.OnRecordAfterUpdateSuccess("Projects").BindFunc(func(e *core.RecordEvent) error {
+		if e.Record.GetString("Completed") == "true" {
+			msg := "PROJECT:" + e.Record.GetString("Name") + " project completed update hook"
+			assignedDomains, err := app.FindAllRecords("Domains",
+				dbx.NewExp("Assigned_Project = {:project}", dbx.Params{"project": e.Record.GetString("id")}),
+			)
+
+			if err != nil {
+				app.Logger().Error(msg, "function", "FindAllRecords", "error", err.Error())
+				return e.Next()
+			}
+			for _, domain := range assignedDomains {
+				domain.Set("Assigned_Project", "")
+				domain.Set("Last_Used", e.Record.GetString("id"))
+				err = app.Save(domain)
+				if err != nil {
+					app.Logger().Error(msg, "projectID", e.Record.GetString("id"), "function", "Save", "error", err.Error())
+					return e.Next()
+				}
+			}
+			app.Logger().Info(msg, "projectID", e.Record.GetString("id"), "status", "completed", "note", "unassigned all domains from the project")
+
+		}
 		return e.Next()
 	})
 }
