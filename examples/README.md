@@ -27,6 +27,11 @@ An example Caddy server configuration for setting up a reverse proxy to RedCompa
 
 Use this as a starting point for deploying RedCompass behind a Caddy reverse proxy in production.
 
+## cleanup-domain-ideas.pb.js
+
+A PocketBase Javascript cron that removes a domain idea if the domain has already been purchased. Simple script to clean up the domain ideas automatically.
+
+
 ## redcompass.service
 
 A systemd service unit file for running RedCompass as a system service on Linux. Features:
@@ -38,3 +43,7 @@ A systemd service unit file for running RedCompass as a system service on Linux.
 - Enables the service to start on system boot
 
 Use this file to set up RedCompass as a systemd service for production deployments on Linux systems.
+
+## webhook.pb.js
+
+A PocketBase JavaScript hook that checks if domains will expire in the next 30 days and if so will send a webhook via Slack or Discord at 8am every Friday.

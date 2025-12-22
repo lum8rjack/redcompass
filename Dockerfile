@@ -1,5 +1,5 @@
 # Stage 1: Build Node.js app
-FROM node:21.7 AS node-builder
+FROM node:25.2 AS node-builder
 
 # Set working directory
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY frontend .
 RUN npm run build
 
 # Stage 2: Build Go app
-FROM golang:1.24 AS go-builder
+FROM golang:1.25 AS go-builder
 
 # Set working directory
 WORKDIR /goapp
