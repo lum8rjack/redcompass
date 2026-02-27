@@ -3,6 +3,7 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import PageDescription from '@/components/PageDescription.vue'
 import { inject, ref, onMounted, computed } from 'vue'
+import { formatDate } from '@/utils/dateUtils'
 
 const pocketbase = inject('$pocketbase')
 const domainIdeas = ref([])
@@ -64,7 +65,7 @@ const fetchDomainIdeas = async () => {
 
     const records = await pocketbase.collection('Domain_Ideas').getFullList({
       sort: '-Domain',
-      fields: 'id,Domain,Price,Description,expand.User',
+      fields: 'id,Domain,Price,Description,created,expand.User',
       expand: 'User'
     })
     domainIdeas.value = records
@@ -332,6 +333,18 @@ onMounted(() => {
                     <th 
                       scope="col" 
                       class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600"
+                      @click="handleSort('created')"
+                    >
+                      <div class="flex items-center space-x-1">
+                        <span>Created</span>
+                        <span v-if="sortConfig.key === 'created'" class="text-gray-400">
+                          {{ sortConfig.direction === 'asc' ? '↑' : '↓' }}
+                        </span>
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600"
                       @click="handleSort('User')"
                     >
                       <div class="flex items-center space-x-1">
@@ -364,6 +377,9 @@ onMounted(() => {
                       @click="openEditModal(idea)"
                       class="px-6 py-4 text-sm text-white whitespace-pre-line cursor-pointer"
                     >{{ idea.Description }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {{ formatDate(idea.created) }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ idea.expand?.User?.name }}</td>
                     <td v-if="!isViewer" class="px-6 py-4 whitespace-nowrap text-sm text-white">
                       <button
@@ -375,7 +391,7 @@ onMounted(() => {
                     </td>
                   </tr>
                   <tr v-if="domainIdeas.length === 0">
-                    <td :colspan="isViewer ? 4 : 5" class="px-6 py-4 text-center text-sm text-gray-400">
+                    <td :colspan="isViewer ? 5 : 6" class="px-6 py-4 text-center text-sm text-gray-400">
                       No domain ideas submitted yet
                     </td>
                   </tr>
