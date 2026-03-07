@@ -13,14 +13,10 @@ const campaignName = ref('')
 const targetGroup = ref('')
 const emailSubject = ref('')
 const emailFromAddress = ref('')
-const phishlet = ref(null)
 const updateMessage = ref('')
 
 // Phishing campaigns
 const phishingCampaigns = ref([])
-
-// Phishlets
-const phishlets = ref([])
 
 const sortColumn = ref('Name');
 const sortDirection = ref('asc');
@@ -68,15 +64,6 @@ async function getPhishingCampaigns() {
 
 onMounted(async () => {
   await getPhishingCampaigns()
-
-  try {
-    const response2 = await pocketbase.collection('Phishlets').getFullList({
-        fields: 'id,Name',
-    });
-    phishlets.value = response2;
-  } catch (error) {
-    console.error('Error fetching phishlets:', error)
-  }
 })
 
 
@@ -103,7 +90,6 @@ const createCampaign = async () => {
       "Example_From": emailFromAddress.value,
       "Target_Group": targetGroup.value,
       "HTML": htmlTemplateText.value,  
-      "Phishlet": phishlet.value,
       "Updated_By": pocketbase.authStore.model.id,
     };
     
@@ -210,26 +196,6 @@ const onHtmlFileChange = (event) => {
                 class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
               />
               <p class="mt-1 text-xs text-gray-400">Upload your HTML email template file</p>
-            </div>
-            
-            <!-- Phishlet -->
-            <div>
-              <label for="phishlet" class="block text-sm font-medium text-white">Phishlet</label>
-              <select
-                id="phishlet"
-                v-model="phishlet"
-                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-white py-1.5 pl-2"
-              >
-                <option value="" disabled selected>Select a phishlet</option>
-                <option 
-                  v-for="phishlet in phishlets" 
-                  :key="phishlet.id"
-                  :value="phishlet.id"
-                >
-                  {{ phishlet.Name }}
-                </option>
-              </select>
-              <p class="mt-1 text-xs text-gray-400">Select your phishlet</p>
             </div>
             
             <!-- Submit Button -->
