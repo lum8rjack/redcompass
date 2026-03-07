@@ -22,7 +22,7 @@ import (
 var frontend embed.FS
 
 var (
-	Version string = "2025.10.2"
+	Version string = "2026.3.0"
 	app     *pocketbase.PocketBase
 	fsys    fs.FS
 )
