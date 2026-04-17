@@ -38,12 +38,23 @@ func checkAllServices() {
 		}
 
 		msg := "CRON:" + serviceName + " startup hook"
-		err := AddDomainsCronJob(service)
-		if err != nil {
-			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
+		if serviceName == "VirusTotal" {
+			err := AddVirusTotalCronJob(service)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddVirusTotalCronJob", "error", err.Error())
+				continue
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", serviceName)
+			continue
+		} else {
+			err := AddDomainsCronJob(service)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddDomainsCronJob", "error", err.Error())
+				continue
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", serviceName)
 			continue
 		}
-		app.Logger().Info(msg, "status", "created", "jobID", serviceName)
 	}
 
 }
@@ -51,13 +62,23 @@ func checkAllServices() {
 func createHook() {
 	app.OnRecordCreate("Services").BindFunc(func(e *core.RecordEvent) error {
 		msg := "CRON:" + e.Record.GetString("Provider") + " create hook"
-		err := AddDomainsCronJob(e.Record)
-		if err != nil {
-			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
+		if e.Record.GetString("Provider") == "VirusTotal" {
+			err := AddVirusTotalCronJob(e.Record)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddVirusTotalCronJob", "error", err.Error())
+				return e.Next()
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
+			return e.Next()
+		} else {
+			err := AddDomainsCronJob(e.Record)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddDomainsCronJob", "error", err.Error())
+				return e.Next()
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
 			return e.Next()
 		}
-		app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
-		return e.Next()
 	})
 }
 
@@ -72,14 +93,23 @@ func updateHook() {
 			return e.Next()
 		}
 
-		err = AddDomainsCronJob(e.Record)
-		if err != nil {
-			app.Logger().Error(msg, "function", "AddCronJob", "error", err.Error())
+		if e.Record.GetString("Provider") == "VirusTotal" {
+			err := AddVirusTotalCronJob(e.Record)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddVirusTotalCronJob", "error", err.Error())
+				return e.Next()
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
+			return e.Next()
+		} else {
+			err := AddDomainsCronJob(e.Record)
+			if err != nil {
+				app.Logger().Error(msg, "function", "AddDomainsCronJob", "error", err.Error())
+				return e.Next()
+			}
+			app.Logger().Info(msg, "status", "created", "jobID", e.Record.GetString("Provider"))
 			return e.Next()
 		}
-
-		app.Logger().Info(msg, "status", "updated", "jobID", e.Record.GetString("Provider"))
-		return e.Next()
 	})
 
 	// When a project is completed, unassign all domains from the project and set the last used project to the project id

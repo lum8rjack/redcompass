@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/lum8rjack/redcompass/scanners/virustotal"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 )
@@ -82,6 +84,41 @@ func DeleteAllDomainRecords(domainName string) error {
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+// Add VirusTotal record to the database
+func AddVirusTotalRecord(vtresults virustotal.VT_Database) error {
+	virustotalCollection, err := app.FindCollectionByNameOrId("VirusTotal")
+	if err != nil {
+		return err
+	}
+
+	record, err := app.FindFirstRecordByData("VirusTotal", "Domain", vtresults.Domain)
+	if err != nil {
+		record = core.NewRecord(virustotalCollection)
+		record.Set("Domain", vtresults.Domain)
+	}
+
+	lastAnalysisResults, err := json.Marshal(vtresults.LastAnalysisResults)
+	if err != nil {
+		return err
+	}
+
+	// Set record details
+	record.Set("Votes_Harmless", vtresults.VotesHarmless)
+	record.Set("Votes_Malicious", vtresults.VotesMalicious)
+	record.Set("Malicious", vtresults.Malicious)
+	record.Set("Suspicious", vtresults.Suspicious)
+	record.Set("Undetected", vtresults.Undetected)
+	record.Set("Harmless", vtresults.Harmless)
+	record.Set("Timeout", vtresults.Timeout)
+	record.Set("Last_Analysis_Results", lastAnalysisResults)
+	err = app.Save(record)
+	if err != nil {
+		return err
 	}
 
 	return nil
