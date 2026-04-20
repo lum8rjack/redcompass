@@ -51,7 +51,7 @@ onMounted(async () => {
       virusTotal.value = await pocketbase.collection('VirusTotal').getFirstListItem(
         `Domain = "${domain.value.Name}"`,
         {
-          fields: "Malicious,Suspicious,Undetected,Harmless"
+          fields: "Malicious,Suspicious,Undetected,Harmless,updated"
         }
       )
     } catch {
@@ -97,21 +97,37 @@ const canEdit = computed(() => {
 /** Malicious + suspicious over sum of M/S/U/H (VirusTotal last_analysis_stats). */
 const virusTotalSummary = computed(() => {
   const vt = virusTotal.value
-  if (!vt) return null
+  if (!vt) {
+    return { bad: 0, total: 0, label: '0/0', hasData: false }
+  }
   const m = Number(vt.Malicious) || 0
   const s = Number(vt.Suspicious) || 0
   const u = Number(vt.Undetected) || 0
   const h = Number(vt.Harmless) || 0
   const bad = m + s
   const total = m + s + u + h
-  return { bad, total, label: `${bad}/${total}` }
+  return { bad, total, label: `${bad}/${total}`, hasData: true }
 })
 
 const virusTotalBadgeClass = computed(() => {
   const summary = virusTotalSummary.value
-  if (!summary) return 'bg-gray-600 text-gray-200'
-  if (summary.bad === 0) return 'bg-green-100 text-green-800'
-  return 'bg-red-100 text-red-800'
+  if (!summary.hasData) {
+    return 'bg-gray-600 text-gray-300 ring-1 ring-gray-500/50'
+  }
+  if (summary.bad === 0) return 'bg-green-100 text-green-800 ring-1 ring-black/10'
+  return 'bg-red-100 text-red-800 ring-1 ring-black/10'
+})
+
+const virusTotalUpdatedLabel = computed(() => {
+  const u = virusTotal.value?.updated
+  if (!u) return ''
+  return formatDate(u)
+})
+
+const virusTotalSubtext = computed(() => {
+  if (!virusTotalSummary.value.hasData) return 'No data available'
+  const d = virusTotalUpdatedLabel.value
+  return d ? `Updated ${d}` : ''
 })
 
 const updateDomain = async () => {
@@ -269,9 +285,22 @@ onClickOutside(searchRef, () => {
                 </div>
 
                 <div class="bg-gray-700 rounded-lg p-3 flex-grow">
-                  <h3 class="text-sm font-medium text-gray-400 mb-2">Health Status</h3>
-                  <div class="flex flex-wrap items-center gap-3">
-                    <div class="flex items-center space-x-2">
+                  <!-- Titles share one row on sm+; on narrow screens order is Health → buttons → VirusTotal → score -->
+                  <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-2">
+                    <h3
+                      class="order-1 text-sm font-medium text-gray-400 sm:order-none sm:col-start-1 sm:row-start-1"
+                    >
+                      Health Status
+                    </h3>
+                    <h3
+                      class="order-3 text-sm font-medium text-gray-400 sm:order-none sm:col-start-2 sm:row-start-1 sm:text-right"
+                    >
+                      VirusTotal
+                    </h3>
+
+                    <div
+                      class="order-2 flex flex-wrap items-center gap-2 sm:order-none sm:col-start-1 sm:row-start-2"
+                    >
                       <button
                         v-if="canEdit"
                         @click="updateHealth(true)"
@@ -315,20 +344,28 @@ onClickOutside(searchRef, () => {
                         Unhealthy
                       </span>
                     </div>
+
                     <div
-                      v-if="virusTotalSummary"
-                      class="ml-auto flex items-center gap-2"
-                      title="VirusTotal: (malicious + suspicious) / (malicious + suspicious + undetected + harmless)"
+                      class="order-4 flex flex-col items-end gap-2.5 text-right sm:order-none sm:col-start-2 sm:row-start-2"
+                      :title="
+                        virusTotalSummary.hasData
+                          ? 'VirusTotal: (malicious + suspicious) / (malicious + suspicious + undetected + harmless)'
+                          : 'No VirusTotal scan data for this domain yet'
+                      "
                     >
-                      <span class="text-xs text-gray-400 whitespace-nowrap">VirusTotal</span>
                       <span
-                        class="px-2.5 py-1 rounded-full text-xs font-medium tabular-nums"
+                        class="inline-flex min-h-[2rem] items-center justify-center rounded-full px-3.5 py-1.5 text-sm font-semibold tabular-nums tracking-tight shadow-sm"
                         :class="virusTotalBadgeClass"
                       >
                         {{ virusTotalSummary.label }}
                       </span>
+                      <span
+                        v-if="virusTotalSubtext"
+                        class="text-xs font-medium tabular-nums leading-snug text-gray-300"
+                      >
+                        {{ virusTotalSubtext }}
+                      </span>
                     </div>
-                    <div v-else class="ml-auto text-xs text-gray-500">No VirusTotal data</div>
                   </div>
                 </div>
 
