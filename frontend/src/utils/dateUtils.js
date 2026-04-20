@@ -11,3 +11,20 @@ export const formatDate = (date) => {
     return '';
   }
 } 
+
+export const toUserDate = (date) => {
+  try {
+    const localDate = new Date(date)
+    if (Number.isNaN(localDate.getTime())) {
+      return ''
+    }
+
+    const month = String(localDate.getMonth() + 1).padStart(2, '0')
+    const day = String(localDate.getDate()).padStart(2, '0')
+    const year = localDate.getFullYear()
+    return `${month}/${day}/${year}`
+  } catch (error) {
+    console.error('Error converting to user date:', error)
+    return ''
+  }
+}

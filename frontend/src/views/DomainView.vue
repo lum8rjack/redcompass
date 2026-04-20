@@ -3,7 +3,7 @@ import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import { ref, inject, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { formatDate } from '@/utils/dateUtils'
+import { formatDate, toUserDate } from '@/utils/dateUtils'
 import { onClickOutside } from '@vueuse/core'
 
 const route = useRoute()
@@ -19,7 +19,6 @@ const availableProjects = ref([])
 const searchQuery = ref('')
 const showResults = ref(false)
 const searchRef = ref(null)
-const newTag = ref('')
 const showTagInput = ref(false)
 const virusTotal = ref(null)
 
@@ -121,7 +120,7 @@ const virusTotalBadgeClass = computed(() => {
 const virusTotalUpdatedLabel = computed(() => {
   const u = virusTotal.value?.updated
   if (!u) return ''
-  return formatDate(u)
+  return toUserDate(u)
 })
 
 const virusTotalSubtext = computed(() => {
