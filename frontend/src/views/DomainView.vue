@@ -21,6 +21,7 @@ const showResults = ref(false)
 const searchRef = ref(null)
 const newTag = ref('')
 const showTagInput = ref(false)
+const virusTotal = ref(null)
 
 // Predefined list of approved tags
 const approvedTags = [
@@ -45,6 +46,17 @@ onMounted(async () => {
     domain.value = record
     notes.value = record.Notes || ''
     isHealthy.value = record.Healthy || false
+
+    try {
+      virusTotal.value = await pocketbase.collection('VirusTotal').getFirstListItem(
+        `Domain = "${domain.value.Name}"`,
+        {
+          fields: "Malicious,Suspicious,Undetected,Harmless"
+        }
+      )
+    } catch {
+      virusTotal.value = null
+    }
 
     // Fetch DNS records for the domain
     const records = await pocketbase.collection('Domain_Records').getFullList({
@@ -80,6 +92,26 @@ const filteredProjects = computed(() => {
 const canEdit = computed(() => {
   const user = pocketbase.authStore.model
   return user && user.role !== 'viewer'
+})
+
+/** Malicious + suspicious over sum of M/S/U/H (VirusTotal last_analysis_stats). */
+const virusTotalSummary = computed(() => {
+  const vt = virusTotal.value
+  if (!vt) return null
+  const m = Number(vt.Malicious) || 0
+  const s = Number(vt.Suspicious) || 0
+  const u = Number(vt.Undetected) || 0
+  const h = Number(vt.Harmless) || 0
+  const bad = m + s
+  const total = m + s + u + h
+  return { bad, total, label: `${bad}/${total}` }
+})
+
+const virusTotalBadgeClass = computed(() => {
+  const summary = virusTotalSummary.value
+  if (!summary) return 'bg-gray-600 text-gray-200'
+  if (summary.bad === 0) return 'bg-green-100 text-green-800'
+  return 'bg-red-100 text-red-800'
 })
 
 const updateDomain = async () => {
@@ -238,49 +270,65 @@ onClickOutside(searchRef, () => {
 
                 <div class="bg-gray-700 rounded-lg p-3 flex-grow">
                   <h3 class="text-sm font-medium text-gray-400 mb-2">Health Status</h3>
-                  <div class="flex items-center space-x-2">
-                    <button
-                      v-if="canEdit"
-                      @click="updateHealth(true)"
-                      :class="{
-                        'px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150': true,
-                        'bg-green-600 text-white': isHealthy,
-                        'bg-gray-600 text-gray-300 hover:bg-gray-500': !isHealthy
-                      }"
+                  <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center space-x-2">
+                      <button
+                        v-if="canEdit"
+                        @click="updateHealth(true)"
+                        :class="{
+                          'px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150': true,
+                          'bg-green-600 text-white': isHealthy,
+                          'bg-gray-600 text-gray-300 hover:bg-gray-500': !isHealthy
+                        }"
+                      >
+                        Healthy
+                      </button>
+                      <span
+                        v-else
+                        :class="{
+                          'px-4 py-2 rounded-md text-sm font-medium': true,
+                          'bg-green-600 text-white': isHealthy,
+                          'bg-gray-600 text-gray-300': !isHealthy
+                        }"
+                      >
+                        Healthy
+                      </span>
+                      <button
+                        v-if="canEdit"
+                        @click="updateHealth(false)"
+                        :class="{
+                          'px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150': true,
+                          'bg-red-600 text-white': !isHealthy,
+                          'bg-gray-600 text-gray-300 hover:bg-gray-500': isHealthy
+                        }"
+                      >
+                        Unhealthy
+                      </button>
+                      <span
+                        v-else
+                        :class="{
+                          'px-4 py-2 rounded-md text-sm font-medium': true,
+                          'bg-red-600 text-white': !isHealthy,
+                          'bg-gray-600 text-gray-300': isHealthy
+                        }"
+                      >
+                        Unhealthy
+                      </span>
+                    </div>
+                    <div
+                      v-if="virusTotalSummary"
+                      class="ml-auto flex items-center gap-2"
+                      title="VirusTotal: (malicious + suspicious) / (malicious + suspicious + undetected + harmless)"
                     >
-                      Healthy
-                    </button>
-                    <span
-                      v-else
-                      :class="{
-                        'px-4 py-2 rounded-md text-sm font-medium': true,
-                        'bg-green-600 text-white': isHealthy,
-                        'bg-gray-600 text-gray-300': !isHealthy
-                      }"
-                    >
-                      Healthy
-                    </span>
-                    <button
-                      v-if="canEdit"
-                      @click="updateHealth(false)"
-                      :class="{
-                        'px-4 py-2 rounded-md text-sm font-medium transition-colors duration-150': true,
-                        'bg-red-600 text-white': !isHealthy,
-                        'bg-gray-600 text-gray-300 hover:bg-gray-500': isHealthy
-                      }"
-                    >
-                      Unhealthy
-                    </button>
-                    <span
-                      v-else
-                      :class="{
-                        'px-4 py-2 rounded-md text-sm font-medium': true,
-                        'bg-red-600 text-white': !isHealthy,
-                        'bg-gray-600 text-gray-300': isHealthy
-                      }"
-                    >
-                      Unhealthy
-                    </span>
+                      <span class="text-xs text-gray-400 whitespace-nowrap">VirusTotal</span>
+                      <span
+                        class="px-2.5 py-1 rounded-full text-xs font-medium tabular-nums"
+                        :class="virusTotalBadgeClass"
+                      >
+                        {{ virusTotalSummary.label }}
+                      </span>
+                    </div>
+                    <div v-else class="ml-auto text-xs text-gray-500">No VirusTotal data</div>
                   </div>
                 </div>
 
