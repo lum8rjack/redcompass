@@ -1,7 +1,7 @@
 <script setup>
   import Header from '@/components/Header.vue'
   import Footer from '@/components/Footer.vue'
-  import { ref, computed, inject, onMounted } from 'vue'
+  import { ref, inject, onMounted } from 'vue'
 
   const pocketbase = inject('$pocketbase')
   const isAdmin = ref(false)
@@ -17,6 +17,12 @@
   const porkbunErrorMessage = ref('')
   const porkbunID = ref('')
   const porkbunCronJob = ref('')
+
+  const virusTotalApiKey = ref('')
+  const virusTotalUsername = ref('')
+  const virusTotalErrorMessage = ref('')
+  const virusTotalID = ref('')
+  const virusTotalCronJob = ref('')
 
   onMounted(async () => {
     try {
@@ -53,6 +59,21 @@
         }
       } catch (error) {
         console.error('Error fetching Porkbun data:', error);
+      }
+
+      // Fetch VirusTotal settings
+      try {
+        const virusTotalRecord = await pocketbase.collection('Services').getFirstListItem('Provider="VirusTotal"', {
+          fields: 'id,Provider,Settings,Cron',
+        })
+        if (virusTotalRecord) {
+          virusTotalApiKey.value = virusTotalRecord.Settings?.apiKey ?? ''
+          virusTotalUsername.value = virusTotalRecord.Settings?.username ?? ''
+          virusTotalCronJob.value = virusTotalRecord.Cron || ''
+          virusTotalID.value = virusTotalRecord.id
+        }
+      } catch (error) {
+        console.error('Error fetching VirusTotal data:', error)
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -175,6 +196,57 @@
       porkbunErrorMessage.value = 'Settings deleted successfully'
     } catch (error) {
       porkbunErrorMessage.value = 'An error occurred while deleting settings'
+    }
+  }
+
+  const saveVirusTotalSettings = async () => {
+    try {
+      virusTotalErrorMessage.value = ''
+      if (virusTotalApiKey.value.length !== 64) {
+        virusTotalErrorMessage.value = 'API Key must be 64 characters (VirusTotal key length)'
+        return
+      }
+      if (virusTotalUsername.value.length < 1) {
+        virusTotalErrorMessage.value = 'Username is required (VirusTotal account id for API usage)'
+        return
+      }
+
+      const data = {
+        Provider: 'VirusTotal',
+        Settings: {
+          apiKey: virusTotalApiKey.value,
+          username: virusTotalUsername.value,
+        },
+        Cron: virusTotalCronJob.value,
+      }
+
+      if (virusTotalID.value) {
+        await pocketbase.collection('Services').update(virusTotalID.value, data)
+        virusTotalErrorMessage.value = 'Settings updated'
+      } else {
+        const record = await pocketbase.collection('Services').create(data)
+        virusTotalID.value = record.id
+        virusTotalErrorMessage.value = 'Settings saved'
+      }
+    } catch (error) {
+      console.error('Error saving VirusTotal settings:', error)
+      virusTotalErrorMessage.value = 'An error occurred while saving settings'
+    }
+  }
+
+  const deleteVirusTotalSettings = async () => {
+    try {
+      virusTotalErrorMessage.value = ''
+      await pocketbase.collection('Services').delete(virusTotalID.value)
+
+      virusTotalApiKey.value = ''
+      virusTotalUsername.value = ''
+      virusTotalCronJob.value = ''
+      virusTotalID.value = ''
+
+      virusTotalErrorMessage.value = 'Settings deleted successfully'
+    } catch (error) {
+      virusTotalErrorMessage.value = 'An error occurred while deleting settings'
     }
   }
 </script>
@@ -308,6 +380,65 @@
 
             <p v-if="porkbunErrorMessage" class="mt-2 text-sm text-white text-center">
               {{ porkbunErrorMessage }}
+            </p>
+          </form>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg shadow p-6 mt-6">
+          <h2 class="text-white text-2xl font-bold mb-6">VirusTotal API Settings</h2>
+          <form @submit.prevent="saveVirusTotalSettings" class="space-y-4">
+            <div>
+              <label for="virusTotalApiKey" class="block text-sm font-medium text-gray-300">API Key</label>
+              <input
+                id="virusTotalApiKey"
+                v-model="virusTotalApiKey"
+                type="password"
+                autocomplete="off"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="Enter your VirusTotal API key"
+              />
+            </div>
+            <div>
+              <label for="virusTotalUsername" class="block text-sm font-medium text-gray-300">Username</label>
+              <input
+                id="virusTotalUsername"
+                v-model="virusTotalUsername"
+                type="text"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="VirusTotal account username (used for API usage / quota)"
+              />
+            </div>
+            <div>
+              <label for="virusTotalCronJob" class="block text-sm font-medium text-gray-300">Cron Job Schedule</label>
+              <input
+                id="virusTotalCronJob"
+                v-model="virusTotalCronJob"
+                type="text"
+                class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-2"
+                placeholder="Enter cron job schedule (e.g., 0 0 * * *)"
+              />
+              <p class="mt-1 text-sm text-gray-400">
+                Format: minute hour day month weekday (e.g., 0 0 * * * runs every day at midnight)
+              </p>
+            </div>
+            <button
+              type="submit"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+            >
+              Save Settings
+            </button>
+
+            <button
+              v-if="virusTotalID"
+              type="button"
+              @click="deleteVirusTotalSettings"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
+            >
+              Delete Settings
+            </button>
+
+            <p v-if="virusTotalErrorMessage" class="mt-2 text-sm text-white text-center">
+              {{ virusTotalErrorMessage }}
             </p>
           </form>
         </div>
